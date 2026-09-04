@@ -1,16 +1,91 @@
 <div class="auth-page-wrapper">
+  <!-- ================================================================ -->
+  <!-- TOP NAVIGATION BAR ACCORDING TO ROLES                            -->
+  <!-- ================================================================ -->
+  <header class="auth-top-navbar">
+    <div class="nav-brand-section">
+      <img src="assets/resqroute-logo.jpg" alt="ResQRoute Logo" class="nav-brand-logo">
+      <div class="nav-brand-title-wrap">
+        <span class="nav-title">RESQROUTE</span>
+        <span class="nav-dept-tag">Operations & Corridor Intelligence • SIH26002</span>
+      </div>
+    </div>
+
+    <!-- Center: Interactive Role Switcher Navbar -->
+    <nav class="nav-role-switcher" aria-label="Select Access Role">
+      <span class="role-nav-intro"><i class='bx bx-user-pin'></i> Choose Role:</span>
+      <div class="role-nav-pills">
+        <button 
+          type="button" 
+          class="role-nav-pill" 
+          [class.active]="selectedRole() === 'CUSTOMER'"
+          (click)="selectRole('CUSTOMER')"
+          id="nav-role-customer">
+          <i class='bx bxs-user'></i>
+          <span class="pill-label">Customer</span>
+          <span class="active-dot" *ngIf="selectedRole() === 'CUSTOMER'"></span>
+        </button>
+
+        <button 
+          type="button" 
+          class="role-nav-pill" 
+          [class.active]="selectedRole() === 'DRIVER'"
+          (click)="selectRole('DRIVER')"
+          id="nav-role-driver">
+          <i class='bx bxs-truck'></i>
+          <span class="pill-label">Field Driver</span>
+          <span class="active-dot" *ngIf="selectedRole() === 'DRIVER'"></span>
+        </button>
+
+        <button 
+          type="button" 
+          class="role-nav-pill" 
+          [class.active]="selectedRole() === 'ADMIN'"
+          (click)="selectRole('ADMIN')"
+          id="nav-role-official">
+          <i class='bx bxs-shield-quarter'></i>
+          <span class="pill-label">Government Official</span>
+          <span class="active-dot" *ngIf="selectedRole() === 'ADMIN'"></span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Right: Mode Switches & Live Status -->
+    <div class="nav-actions-section">
+      <div class="nav-mode-segment">
+        <button 
+          type="button" 
+          class="nav-mode-btn" 
+          [class.active]="viewMode() === 'signup'"
+          (click)="setViewMode('signup')">
+          <i class='bx bx-user-plus'></i> Register
+        </button>
+        <button 
+          type="button" 
+          class="nav-mode-btn" 
+          [class.active]="viewMode() === 'signin'"
+          (click)="setViewMode('signin')">
+          <i class='bx bx-log-in'></i> Sign In
+        </button>
+      </div>
+
+      <div class="nav-status-badge">
+        <span class="status-live-dot"></span>
+        <span class="status-text">NE Corridors Live</span>
+      </div>
+    </div>
+  </header>
+
   <div class="auth-split-card">
 
     <!-- ================================================================ -->
-    <!-- LEFT HERO PANEL (MATCHES USER REFERENCE MOCKUPS 1, 2, 3)         -->
+    <!-- LEFT HERO PANEL (STICKY, NEVER MOVES - MATCHES MOCKUPS)           -->
     <!-- ================================================================ -->
-    <aside class="brand-hero-panel">
+    <aside class="brand-hero-panel sticky-hero">
       <!-- Top Brand Header -->
       <div class="panel-header">
         <div class="brand-badge">
-          <div class="logo-circle">
-            <i class='bx bxs-navigation'></i>
-          </div>
+          <img src="assets/resqroute-logo.jpg" alt="ResQRoute Logo" class="hero-brand-logo">
           <div class="brand-text">
             <span class="brand-title">RESQROUTE</span>
             <span class="brand-subtitle">Northeast Logistics Corridor</span>
@@ -135,9 +210,8 @@
             src="assets/resqroute-truck.jpg" 
             alt="ResQRoute Logistics Highway Delivery Truck"
             class="truck-img"
-            onerror="this.src='assets/driver-hero-panel.jpg'">
-          <div class="truck-overlay">
-            <span class="truck-script" *ngIf="selectedRole() === 'DRIVER'">Safer Routes, Brighter Lives</span>
+            onerror="this.src='assets/resqroute-hero-panel.jpg'">
+          <div class="truck-overlay" *ngIf="selectedRole() !== 'DRIVER'">
             <span class="truck-script" *ngIf="selectedRole() === 'CUSTOMER'">Connecting Northeast Together</span>
             <span class="truck-script" *ngIf="selectedRole() === 'ADMIN'">Routes, People, Progress</span>
           </div>

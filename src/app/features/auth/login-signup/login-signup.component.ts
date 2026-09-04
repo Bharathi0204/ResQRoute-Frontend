@@ -144,6 +144,10 @@ export class LoginSignupComponent implements OnInit {
     this.errorMessage.set(null);
   }
 
+  public selectRole(role: UserRole): void {
+    this.setRole(role);
+  }
+
   public setForgotRole(role: UserRole): void {
     this.forgotRole.set(role);
     this.errorMessage.set(null);

@@ -13,7 +13,7 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       <!-- Top Navbar -->
       <header class="navbar">
         <div class="brand">
-          <div class="brand-icon"><i class='bx bxs-shield-plus'></i></div>
+          <img src="assets/resqroute-logo.jpg" alt="ResQRoute Logo" class="brand-logo-img">
           <div>
             <div class="brand-title">RESQROUTE <strong>AUTHORITY COMMAND CENTER</strong></div>
             <div class="brand-subtitle">Ministry of Development of North Eastern Region (MDoNER)</div>
@@ -625,16 +625,16 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       align-items: center;
       gap: 12px;
     }
-    .brand-icon {
-      width: 40px;
-      height: 40px;
+    .brand-logo-img {
+      height: 42px;
+      width: auto;
+      object-fit: contain;
       border-radius: 10px;
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      color: #0f172a;
+      image-rendering: -webkit-optimize-contrast;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      background: #091a36;
+      padding: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
     }
     .brand-title {
       font-size: 16px;

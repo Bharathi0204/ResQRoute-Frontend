@@ -11,8 +11,11 @@ import { AuthService } from '../../core/services/auth.service';
     <div class="dashboard-container">
       <header class="navbar">
         <div class="brand">
-          <i class='bx bxs-shield-plus'></i>
-          <span>RESQROUTE <strong>OPERATIONS PORTAL</strong></span>
+          <img src="assets/resqroute-logo.jpg" alt="ResQRoute Logo" class="brand-logo-img">
+          <div class="brand-text">
+            <span>RESQROUTE <strong>OPERATIONS PORTAL</strong></span>
+            <small class="brand-sub">Northeast Logistics Corridor</small>
+          </div>
         </div>
         <div class="nav-right">
           <span class="status-indicator user-badge">
@@ -183,10 +186,29 @@ import { AuthService } from '../../core/services/auth.service';
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 18px;
-      letter-spacing: 1px;
+      gap: 12px;
+      font-size: 17px;
+      letter-spacing: 0.5px;
       color: #2563eb;
+    }
+    .brand-logo-img {
+      height: 38px;
+      width: auto;
+      object-fit: contain;
+      border-radius: 8px;
+      image-rendering: -webkit-optimize-contrast;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+      letter-spacing: 0.3px;
     }
     .brand strong {
       color: #0f172a;
