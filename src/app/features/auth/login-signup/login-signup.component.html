@@ -1,85 +1,8 @@
 <div class="auth-page-wrapper">
-  <!-- ================================================================ -->
-  <!-- TOP NAVIGATION BAR ACCORDING TO ROLES                            -->
-  <!-- ================================================================ -->
-  <header class="auth-top-navbar">
-    <div class="nav-brand-section">
-      <img src="assets/resqroute-logo.jpg" alt="ResQRoute Logo" class="nav-brand-logo">
-      <div class="nav-brand-title-wrap">
-        <span class="nav-title">RESQROUTE</span>
-        <span class="nav-dept-tag">Operations & Corridor Intelligence • SIH26002</span>
-      </div>
-    </div>
-
-    <!-- Center: Interactive Role Switcher Navbar -->
-    <nav class="nav-role-switcher" aria-label="Select Access Role">
-      <span class="role-nav-intro"><i class='bx bx-user-pin'></i> Choose Role:</span>
-      <div class="role-nav-pills">
-        <button 
-          type="button" 
-          class="role-nav-pill" 
-          [class.active]="selectedRole() === 'CUSTOMER'"
-          (click)="selectRole('CUSTOMER')"
-          id="nav-role-customer">
-          <i class='bx bxs-user'></i>
-          <span class="pill-label">Customer</span>
-          <span class="active-dot" *ngIf="selectedRole() === 'CUSTOMER'"></span>
-        </button>
-
-        <button 
-          type="button" 
-          class="role-nav-pill" 
-          [class.active]="selectedRole() === 'DRIVER'"
-          (click)="selectRole('DRIVER')"
-          id="nav-role-driver">
-          <i class='bx bxs-truck'></i>
-          <span class="pill-label">Field Driver</span>
-          <span class="active-dot" *ngIf="selectedRole() === 'DRIVER'"></span>
-        </button>
-
-        <button 
-          type="button" 
-          class="role-nav-pill" 
-          [class.active]="selectedRole() === 'ADMIN'"
-          (click)="selectRole('ADMIN')"
-          id="nav-role-official">
-          <i class='bx bxs-shield-quarter'></i>
-          <span class="pill-label">Government Official</span>
-          <span class="active-dot" *ngIf="selectedRole() === 'ADMIN'"></span>
-        </button>
-      </div>
-    </nav>
-
-    <!-- Right: Mode Switches & Live Status -->
-    <div class="nav-actions-section">
-      <div class="nav-mode-segment">
-        <button 
-          type="button" 
-          class="nav-mode-btn" 
-          [class.active]="viewMode() === 'signup'"
-          (click)="setViewMode('signup')">
-          <i class='bx bx-user-plus'></i> Register
-        </button>
-        <button 
-          type="button" 
-          class="nav-mode-btn" 
-          [class.active]="viewMode() === 'signin'"
-          (click)="setViewMode('signin')">
-          <i class='bx bx-log-in'></i> Sign In
-        </button>
-      </div>
-
-      <div class="nav-status-badge">
-        <span class="status-live-dot"></span>
-        <span class="status-text">NE Corridors Live</span>
-      </div>
-    </div>
-  </header>
-
   <div class="auth-split-card">
 
     <!-- ================================================================ -->
-    <!-- LEFT HERO PANEL (STICKY, NEVER MOVES - MATCHES MOCKUPS)           -->
+    <!-- LEFT HERO PANEL (MATCHES USER REFERENCE MOCKUP)                  -->
     <!-- ================================================================ -->
     <aside class="brand-hero-panel sticky-hero">
       <!-- Top Brand Header -->
@@ -550,6 +473,8 @@
                   type="button" 
                   class="eye-btn" 
                   (click)="toggleRegisterPassword()" 
+                  (mousedown)="$event.preventDefault()"
+                  [attr.aria-label]="showRegisterPassword() ? 'Hide password' : 'Show password'"
                   tabindex="-1">
                   <i class='bx' [class.bx-show]="!showRegisterPassword()" [class.bx-hide]="showRegisterPassword()"></i>
                 </button>
@@ -570,6 +495,8 @@
                   type="button" 
                   class="eye-btn" 
                   (click)="toggleConfirmPassword()" 
+                  (mousedown)="$event.preventDefault()"
+                  [attr.aria-label]="showConfirmPassword() ? 'Hide password' : 'Show password'"
                   tabindex="-1">
                   <i class='bx' [class.bx-show]="!showConfirmPassword()" [class.bx-hide]="showConfirmPassword()"></i>
                 </button>
@@ -641,6 +568,8 @@
                 type="button" 
                 class="eye-btn" 
                 (click)="toggleLoginPassword()" 
+                (mousedown)="$event.preventDefault()"
+                [attr.aria-label]="showLoginPassword() ? 'Hide password' : 'Show password'"
                 tabindex="-1">
                 <i class='bx' [class.bx-show]="!showLoginPassword()" [class.bx-hide]="showLoginPassword()"></i>
               </button>

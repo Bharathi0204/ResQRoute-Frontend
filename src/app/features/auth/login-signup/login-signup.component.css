@@ -3,226 +3,54 @@
    ========================================================================== */
 
 .auth-page-wrapper {
+  min-height: 100vh;
   height: 100vh;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  background: #08162b;
-  font-family: 'Poppins', sans-serif;
+  background: #eef3f8;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: #0f172a;
+  padding: 24px;
+  box-sizing: border-box;
 }
 
 /* ==========================================================================
-   TOP GLOBAL NAVBAR ACCORDING TO ROLES
-   ========================================================================== */
-.auth-top-navbar {
-  height: 64px;
-  background: rgba(9, 26, 54, 0.98);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 28px;
-  flex-shrink: 0;
-  z-index: 100;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-}
-
-.nav-brand-section {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.nav-brand-logo {
-  height: 40px;
-  width: auto;
-  object-fit: contain;
-  border-radius: 9px;
-  image-rendering: -webkit-optimize-contrast;
-  background: #091a36;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  padding: 2px;
-}
-
-.nav-brand-title-wrap {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-}
-
-.nav-title {
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: 1.2px;
-  color: #ffffff;
-}
-
-.nav-dept-tag {
-  font-size: 10.5px;
-  color: #38bdf8;
-  font-weight: 500;
-  letter-spacing: 0.3px;
-}
-
-/* Role Switcher in Top Nav */
-.nav-role-switcher {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.role-nav-intro {
-  font-size: 12px;
-  color: #94a3b8;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.role-nav-pills {
-  display: flex;
-  align-items: center;
-  background: rgba(15, 23, 42, 0.7);
-  padding: 4px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  gap: 4px;
-}
-
-.role-nav-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: transparent;
-  color: #94a3b8;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 9px;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.role-nav-pill:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.role-nav-pill.active {
-  background: #2563eb;
-  color: #ffffff;
-  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.4);
-}
-
-.role-nav-pill i {
-  font-size: 16px;
-}
-
-.active-dot {
-  width: 6px;
-  height: 6px;
-  background: #38bdf8;
-  border-radius: 50%;
-  box-shadow: 0 0 6px #38bdf8;
-}
-
-/* Right Nav Actions */
-.nav-actions-section {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.nav-mode-segment {
-  display: flex;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 3px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.nav-mode-btn {
-  background: none;
-  border: none;
-  color: #cbd5e1;
-  padding: 6px 12px;
-  border-radius: 7px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.2s;
-}
-
-.nav-mode-btn.active {
-  background: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-}
-
-.nav-status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  color: #34d399;
-  font-weight: 600;
-}
-
-.status-live-dot {
-  width: 7px;
-  height: 7px;
-  background: #10b981;
-  border-radius: 50%;
-  box-shadow: 0 0 6px #10b981;
-}
-
-/* ==========================================================================
-   SPLIT CONTAINER: STICKY LEFT HERO + SCROLLABLE RIGHT FORM
+   SPLIT CONTAINER: STICKY LEFT HERO + SCROLLABLE RIGHT FORM (NO TOP NAVBAR)
    ========================================================================== */
 .auth-split-card {
-  flex: 1;
-  height: calc(100vh - 64px);
   width: 100%;
-  max-width: 100%;
+  max-width: 1220px;
+  height: 92vh;
+  max-height: 860px;
+  min-height: 640px;
   background: #ffffff;
-  border-radius: 0;
+  border-radius: 20px;
   display: flex;
   overflow: hidden;
-  border: none;
-  box-shadow: none;
+  box-shadow: 0 20px 60px -15px rgba(15, 35, 65, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
-/* LEFT STICKY HERO PANEL (FIXED/STICKY, DOES NOT MOVE) */
-.brand-hero-panel.sticky-hero {
-  flex: 0 0 43%;
-  max-width: 43%;
+/* LEFT STICKY HERO PANEL (MATCHING VIBRANT AZURE SKY OF USER REFERENCE MOCKUP) */
+.brand-hero-panel {
+  flex: 0 0 42%;
+  max-width: 42%;
   height: 100%;
   position: sticky;
   top: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  background: linear-gradient(170deg, #091a36 0%, #0d2347 55%, #08162b 100%);
+  background: linear-gradient(180deg, #0b458c 0%, #1157a9 22%, #176dc7 50%, #1358a5 82%, #0b3d77 100%);
   color: #ffffff;
-  padding: 28px 36px 36px;
+  padding: 30px 34px 28px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 6px 0 28px rgba(11, 45, 90, 0.22);
   z-index: 10;
+  box-sizing: border-box;
 }
 
 .panel-header {
@@ -244,9 +72,9 @@
   object-fit: contain;
   border-radius: 10px;
   image-rendering: -webkit-optimize-contrast;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: #091a36;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  background: #ffffff;
   padding: 2px;
 }
 
@@ -265,17 +93,18 @@
 
 .brand-subtitle {
   font-size: 11.5px;
-  color: #38bdf8;
+  color: #bfdbfe;
   font-weight: 500;
 }
 
 .script-badge {
   font-family: 'Caveat', 'Brush Script MT', cursive, sans-serif;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 15px;
   line-height: 1.25;
   text-align: right;
   letter-spacing: 0.3px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Hero Content */
@@ -320,52 +149,53 @@
 }
 
 .bullet-icon {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: rgba(37, 99, 235, 0.22);
+  background: rgba(255, 255, 255, 0.16);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #60a5fa;
-  font-size: 18px;
+  color: #ffffff;
+  font-size: 19px;
   flex-shrink: 0;
-  border: 1px solid rgba(96, 165, 250, 0.25);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .bullet-content strong {
   display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #f8fafc;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 .bullet-content p {
   margin: 1px 0 0;
   font-size: 11.5px;
-  color: #94a3b8;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-/* High-Quality Truck Photo Card */
+/* High-Quality Truck Photo Card with vibrant azure background & shadow */
 .truck-visual-card {
   position: relative;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 16px 36px -8px rgba(11, 45, 90, 0.5);
   margin-top: auto;
   flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: #091a36;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  background: #0d468e;
 }
 
 .truck-img {
   width: 100%;
-  height: 170px;
+  height: 165px;
   object-fit: cover;
   display: block;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
-  filter: saturate(1.08) contrast(1.05);
+  filter: brightness(1.02) saturate(1.15) contrast(1.05);
   transition: transform 0.4s ease;
 }
 
@@ -378,8 +208,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 14px 18px;
-  background: linear-gradient(transparent, rgba(8, 22, 43, 0.9));
+  padding: 12px 16px;
+  background: linear-gradient(transparent, rgba(11, 45, 90, 0.88));
 }
 
 .truck-script {
@@ -478,51 +308,56 @@
   color: inherit;
 }
 
-/* 3-Role Cards Grid */
+/* 3-Role Cards Grid (Matches User Reference Mockup Images 1, 2, 3) */
 .role-cards-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .role-card {
   border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 12px 10px;
+  border-radius: 12px;
+  padding: 12px 14px;
   cursor: pointer;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
   position: relative;
   transition: all 0.2s ease;
   background: #ffffff;
+  min-width: 0;
 }
 
 .role-card:hover {
   border-color: #93c5fd;
+  background: #f8fafc;
 }
 
 .role-card.active {
-  border-color: #1d4ed8;
-  background: rgba(37, 99, 235, 0.04);
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
 }
 
 .role-icon-box {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   background: #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #2563eb;
-  font-size: 18px;
+  font-size: 20px;
+  flex-shrink: 0;
   transition: all 0.2s;
 }
 
 .role-card.active .role-icon-box {
-  background: #1d4ed8;
+  background: #2563eb;
   color: #ffffff;
 }
 
@@ -530,33 +365,40 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 .role-title {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
   color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .role-subtitle {
   font-size: 11px;
   color: #64748b;
   line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .checked-circle {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: #1d4ed8;
+  background: #2563eb;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
 }
 
 .info-notice-card {
@@ -589,17 +431,28 @@
 
 .form-row {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-row.two-col {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.field-item {
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 .field-item label {
   display: block;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   color: #334155;
   margin-bottom: 5px;
@@ -652,51 +505,78 @@
 
 .input-wrapper {
   position: relative;
-  display: flex;
-  align-items: center;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
-.input-wrapper i {
+.input-wrapper i.bx:first-child,
+.input-wrapper > i:not(.eye-btn i) {
   position: absolute;
   left: 12px;
-  font-size: 17px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
   color: #94a3b8;
   pointer-events: none;
+  z-index: 2;
+  line-height: 1;
 }
 
 .input-wrapper input,
 .input-wrapper select {
   width: 100%;
-  padding: 9px 12px 9px 38px;
+  box-sizing: border-box;
+  height: 42px;
+  padding: 10px 14px 10px 38px;
   border-radius: 10px;
-  border: 1.5px solid #e2e8f0;
-  font-size: 13px;
+  border: 1.5px solid #cbd5e1;
+  font-size: 13.5px;
   color: #0f172a;
   background: #ffffff;
   outline: none;
-  transition: all 0.2s;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   font-family: inherit;
+  line-height: 1.4;
+}
+
+/* Password inputs specifically get generous right padding so text is 100% visible and never obstructed */
+.input-wrapper input[type="password"],
+.input-wrapper input[type="text"] {
+  padding-right: 44px;
 }
 
 .input-wrapper input:focus,
 .input-wrapper select:focus {
   border-color: #1d4ed8;
-  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
 }
 
 .input-wrapper .eye-btn {
   position: absolute;
-  right: 10px;
-  background: none;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
   border: none;
-  color: #94a3b8;
-  font-size: 17px;
+  color: #64748b;
+  font-size: 19px;
   cursor: pointer;
-  padding: 4px;
+  border-radius: 6px;
+  padding: 0;
+  margin: 0;
+  z-index: 3;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .input-wrapper .eye-btn:hover {
-  color: #334155;
+  color: #1d4ed8;
+  background-color: #eff6ff;
 }
 
 /* Select wrapper custom arrow */
@@ -1218,42 +1098,32 @@
 }
 
 /* ==========================================================================
-   RESPONSIVENESS (TABLETS & MOBILE)
+   MOBILE & TABLET RESPONSIVENESS (< 992px & < 768px)
    ========================================================================== */
 @media (max-width: 992px) {
   .auth-page-wrapper {
     height: auto;
     min-height: 100vh;
+    padding: 16px;
     overflow-y: auto;
-  }
-
-  .auth-top-navbar {
-    height: auto;
-    flex-wrap: wrap;
-    padding: 12px 16px;
-    gap: 12px;
-  }
-
-  .nav-role-switcher {
-    order: 3;
-    width: 100%;
-    justify-content: center;
-    overflow-x: auto;
-    padding-bottom: 4px;
   }
 
   .auth-split-card {
     height: auto;
+    max-height: none;
     flex-direction: column;
     overflow: visible;
   }
 
-  .brand-hero-panel.sticky-hero {
+  .brand-hero-panel {
     flex: none;
     max-width: 100%;
+    width: 100%;
     position: relative;
     height: auto;
     padding: 24px 20px;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   }
 
   .form-content-panel {
@@ -1268,22 +1138,134 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .auth-page-wrapper {
+    padding: 10px;
+    background: #0b254a;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .auth-split-card {
+    width: 100%;
+    max-width: 480px;
+    border-radius: 16px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Compact Brand Header on Mobile: Simple, Clean, Aligned */
+  .brand-hero-panel {
+    padding: 18px 16px;
+  }
+
+  .panel-header {
+    margin-bottom: 0;
+    align-items: center;
+  }
+
+  .hero-brand-logo {
+    height: 38px;
+  }
+
+  .brand-title {
+    font-size: 17px;
+  }
+
+  .brand-subtitle {
+    font-size: 10.5px;
+  }
+
+  /* On mobile phones, hide long bullets & decorative truck to keep design simple & fast to access */
+  .hero-body,
+  .hero-text-block,
+  .feature-bullets,
+  .truck-visual-card,
+  .script-badge {
+    display: none !important;
+  }
+
+  /* Right Form Panel on Mobile: Clean single-column layout */
+  .form-content-panel {
+    padding: 20px 16px 32px;
+  }
+
+  .form-header h2 {
+    font-size: 19px;
+  }
+
+  .form-header p {
+    font-size: 12px;
+  }
+
+  /* Role selector cards on mobile: clean 1-column stack */
   .role-cards-grid {
     grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
   }
 
+  .role-card {
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .role-icon-box {
+    width: 34px;
+    height: 34px;
+    font-size: 17px;
+  }
+
+  .role-title {
+    font-size: 12.5px;
+  }
+
+  .role-subtitle {
+    font-size: 10.5px;
+  }
+
+  /* All form rows stack into 1 clean column on mobile */
+  .form-row,
   .form-row.two-col {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+    margin-bottom: 12px;
   }
 
-  .role-nav-pills {
-    flex-direction: column;
-    width: 100%;
+  .field-item label {
+    font-size: 12px;
   }
 
-  .role-nav-pill {
-    width: 100%;
-    justify-content: center;
+  .input-wrapper input,
+  .input-wrapper select {
+    font-size: 15px; /* iOS zoom prevention */
+    height: 44px;
+    padding: 10px 42px 10px 38px;
+  }
+
+  .input-wrapper .eye-btn {
+    width: 36px;
+    height: 36px;
+    right: 6px;
+  }
+
+  .submit-btn {
+    min-height: 48px;
+    font-size: 14.5px;
+    border-radius: 10px;
+    margin-top: 14px;
+  }
+
+  .terms-row {
+    margin: 12px 0 14px;
+  }
+
+  .checkbox-label {
+    font-size: 11.5px;
+    align-items: flex-start;
+  }
+
+  .checkbox-label input {
+    margin-top: 2px;
   }
 }
