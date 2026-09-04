@@ -123,17 +123,6 @@ export class LoginSignupComponent implements OnInit {
     this.errorMessage.set('For security, please type your confirm password manually.');
   }
 
-  public quickFillDemo(role: 'admin' | 'driver' | 'customer'): void {
-    if (role === 'admin') {
-      this.loginForm.patchValue({ username: 'admin', password: 'admin123' });
-    } else if (role === 'driver') {
-      this.loginForm.patchValue({ username: 'driver1', password: 'driver123' });
-    } else {
-      this.loginForm.patchValue({ username: 'customer1', password: 'customer123' });
-    }
-    this.isRegisterActive.set(false);
-  }
-
   public onLogin(): void {
     if (this.loginForm.invalid) {
       this.errorMessage.set('Please fill in both username/email and password.');
