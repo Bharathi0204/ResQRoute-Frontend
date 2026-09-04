@@ -1,0 +1,15 @@
+/* Global styles for ResQRoute */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  text-decoration: none;
+  list-style: none;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  background-color: #0f172a;
+}

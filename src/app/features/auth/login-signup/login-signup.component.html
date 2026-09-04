@@ -1,0 +1,223 @@
+<div class="auth-page-wrapper">
+  <!-- System Status Top Bar -->
+  <div class="system-status-bar" [class.online]="isBackendOnline()">
+    <span class="pulse-dot"></span>
+    <span>{{ backendStatus() }}</span>
+  </div>
+
+  <div class="container" [class.active]="isRegisterActive()">
+    
+    <!-- LOGIN FORM BOX -->
+    <div class="form-box login">
+      <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+        <div class="brand-badge">
+          <i class='bx bxs-shield-plus'></i> RESQROUTE
+        </div>
+        <h1>Login</h1>
+        <p class="subtitle">Enter your credentials to access logistics intelligence</p>
+
+        <!-- Status Alerts -->
+        @if (errorMessage()) {
+          <div class="alert alert-danger">
+            <i class='bx bxs-error-circle'></i> {{ errorMessage() }}
+          </div>
+        }
+        @if (successMessage()) {
+          <div class="alert alert-success">
+            <i class='bx bxs-check-circle'></i> {{ successMessage() }}
+          </div>
+        }
+
+        <div class="input-box">
+          <input type="text" formControlName="username" placeholder="Username or Email" required>
+          <i class='bx bxs-user'></i>
+        </div>
+
+        <div class="input-box">
+          <input type="password" formControlName="password" placeholder="Password" required>
+          <i class='bx bxs-lock-alt'></i>
+        </div>
+
+        <div class="forgot-link">
+          <a href="javascript:void(0)" (click)="errorMessage.set('Please contact your administrator or fleet manager to reset credentials.')">Forgot Password?</a>
+        </div>
+
+        <button type="submit" class="btn" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="spinner"></span> Authenticating...
+          } @else {
+            <span>Sign In</span>
+          }
+        </button>
+
+        <!-- Quick Demo Switcher -->
+        <div class="demo-accounts">
+          <p class="demo-title">Fast Demo Logins:</p>
+          <div class="demo-chips">
+            <button type="button" class="chip driver" (click)="quickFillDemo('driver')">
+              <i class='bx bxs-truck'></i> Driver (TR-102)
+            </button>
+            <button type="button" class="chip customer" (click)="quickFillDemo('customer')">
+              <i class='bx bxs-user-pin'></i> Customer
+            </button>
+            <button type="button" class="chip admin" (click)="quickFillDemo('admin')">
+              <i class='bx bxs-dashboard'></i> Admin
+            </button>
+          </div>
+        </div>
+
+        <div class="mobile-toggle-switch">
+          Don't have an account? 
+          <a href="javascript:void(0)" (click)="togglePanel(true)">Register Now</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- REGISTRATION FORM BOX -->
+    <div class="form-box register">
+      <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
+        <div class="brand-badge">
+          <i class='bx bxs-shield-plus'></i> RESQROUTE
+        </div>
+        <h1>Create Account</h1>
+        
+        <!-- Role Selector Switch -->
+        <div class="role-selector">
+          <button 
+            type="button" 
+            class="role-pill" 
+            [class.active]="selectedRole() === 'CUSTOMER'"
+            (click)="setRole('CUSTOMER')">
+            <i class='bx bxs-user'></i> Customer / Operations
+          </button>
+          <button 
+            type="button" 
+            class="role-pill" 
+            [class.active]="selectedRole() === 'DRIVER'"
+            (click)="setRole('DRIVER')">
+            <i class='bx bxs-truck'></i> Field Driver
+          </button>
+        </div>
+
+        <!-- Status Alerts -->
+        @if (errorMessage()) {
+          <div class="alert alert-danger">
+            <i class='bx bxs-error-circle'></i> {{ errorMessage() }}
+          </div>
+        }
+        @if (successMessage()) {
+          <div class="alert alert-success">
+            <i class='bx bxs-check-circle'></i> {{ successMessage() }}
+          </div>
+        }
+
+        <div class="form-scrollable">
+          <div class="input-grid">
+            <div class="input-box">
+              <input type="text" formControlName="fullName" placeholder="Full Name" required>
+              <i class='bx bxs-id-card'></i>
+            </div>
+
+            <div class="input-box">
+              <input type="text" formControlName="username" placeholder="Username" required>
+              <i class='bx bxs-user'></i>
+            </div>
+          </div>
+
+          <div class="input-grid">
+            <div class="input-box">
+              <input type="email" formControlName="email" placeholder="Email Address" required>
+              <i class='bx bxs-envelope'></i>
+            </div>
+
+            <div class="input-box">
+              <input type="text" formControlName="phone" placeholder="Phone Number" required>
+              <i class='bx bxs-phone'></i>
+            </div>
+          </div>
+
+          <div class="input-box">
+            <input type="text" formControlName="organization" placeholder="Organization (e.g. ASTC / Hospital / NDRF)" required>
+            <i class='bx bxs-business'></i>
+          </div>
+
+          <!-- DRIVER-SPECIFIC FIELDS -->
+          @if (selectedRole() === 'DRIVER') {
+            <div class="input-grid role-specific-grid">
+              <div class="input-box">
+                <input type="text" formControlName="vehicleNumber" placeholder="Assigned Vehicle (e.g. TR-102)" required>
+                <i class='bx bxs-truck'></i>
+              </div>
+
+              <div class="input-box">
+                <input type="text" formControlName="licenseNumber" placeholder="License / Driver ID (e.g. DRV-001)" required>
+                <i class='bx bxs-badge-check'></i>
+              </div>
+            </div>
+          }
+
+          <!-- CUSTOMER-SPECIFIC FIELDS -->
+          @if (selectedRole() === 'CUSTOMER') {
+            <div class="input-box role-specific-box">
+              <input type="text" formControlName="department" placeholder="Department / Hub (e.g. Emergency Logistics)">
+              <i class='bx bxs-building'></i>
+            </div>
+          }
+
+          <div class="input-grid">
+            <div class="input-box">
+              <input type="password" formControlName="password" placeholder="Password (min 6)" required>
+              <i class='bx bxs-lock-alt'></i>
+            </div>
+
+            <div class="input-box">
+              <input type="password" formControlName="confirmPassword" placeholder="Confirm Password" required>
+              <i class='bx bxs-check-shield'></i>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="spinner"></span> Registering...
+          } @else {
+            <span>Register as {{ selectedRole() }}</span>
+          }
+        </button>
+
+        <div class="mobile-toggle-switch">
+          Already registered? 
+          <a href="javascript:void(0)" (click)="togglePanel(false)">Log In</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- SLIDING TOGGLE BOX OVERLAY (MATCHING 33-LOGIN DESIGN) -->
+    <div class="toggle-box">
+      <div class="toggle-panel toggle-left">
+        <div class="panel-icon">
+          <i class='bx bxs-navigation'></i>
+        </div>
+        <h1>RESQROUTE</h1>
+        <p class="tagline">Resilient Logistics & Route Intelligence</p>
+        <p class="subtag">Smart Routes. Safe Deliveries. Stronger Communities.</p>
+        <div class="divider-line"></div>
+        <p>New to ResQRoute Corridor Network?</p>
+        <button type="button" class="btn register-btn" (click)="togglePanel(true)">Register</button>
+      </div>
+
+      <div class="toggle-panel toggle-right">
+        <div class="panel-icon">
+          <i class='bx bxs-truck'></i>
+        </div>
+        <h1>Welcome Back!</h1>
+        <p class="tagline">Guwahati → Silchar Demonstration Corridor</p>
+        <p class="subtag">Access real-time risk assessment & fleet dispatches.</p>
+        <div class="divider-line"></div>
+        <p>Already have an active credential?</p>
+        <button type="button" class="btn login-btn" (click)="togglePanel(false)">Login</button>
+      </div>
+    </div>
+
+  </div>
+</div>
