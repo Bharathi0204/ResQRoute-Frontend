@@ -17,20 +17,45 @@ export class LoginSignupComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  // Toggle active state for sliding animation (matching 33-Login JS)
+  // Toggle active state for sliding animation
   public isRegisterActive = signal<boolean>(false);
 
   // Selected Role for Registration & Login
   public selectedRole = signal<UserRole>('CUSTOMER');
 
-  // Backend Health & Status
-  public backendStatus = signal<string>('Checking backend...');
-  public isBackendOnline = signal<boolean>(false);
+  // Password Visibility Toggles
+  public showLoginPassword = signal<boolean>(false);
+  public showRegisterPassword = signal<boolean>(false);
+  public showConfirmPassword = signal<boolean>(false);
 
   // Loading & Error States
   public isLoading = signal<boolean>(false);
   public errorMessage = signal<string | null>(null);
   public successMessage = signal<string | null>(null);
+
+  // Predefined Organizations & Departments
+  public organizations: string[] = [
+    'Assam State Transport Corporation (ASTC)',
+    'Guwahati Medical College & Hospital (GMCH)',
+    'National Disaster Response Force (NDRF)',
+    'State Disaster Response Force (SDRF Assam)',
+    'Ministry of Development of North Eastern Region (MDoNER)',
+    'Civil Hospital Silchar / District Administration',
+    'Meghalaya State Transport Corporation (MSTC)',
+    'Border Roads Organisation (BRO / Vartak)',
+    'Other Logistics Partner'
+  ];
+
+  public departments: string[] = [
+    'Emergency Logistics & Relief Operations',
+    'Emergency Medical Supplies & Vaccines',
+    'Disaster Relief & Essential Food Supplies',
+    'Corridor Dispatch & Fleet Coordination',
+    'District Disaster Management Authority (DDMA)',
+    'Civil Hospital Medical Store',
+    'General Healthcare Operations',
+    'Other Department'
+  ];
 
   // Reactive Forms
   public loginForm!: FormGroup;
@@ -38,7 +63,6 @@ export class LoginSignupComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForms();
-    this.checkBackendHealth();
 
     // If already logged in, redirect to respective role dashboard
     const currentUser = this.authService.currentUser();
@@ -70,19 +94,6 @@ export class LoginSignupComponent implements OnInit {
     });
   }
 
-  public checkBackendHealth(): void {
-    this.authService.checkHealth().subscribe({
-      next: (res) => {
-        this.isBackendOnline.set(true);
-        this.backendStatus.set('Backend Connected ✓ (ResQRoute API)');
-      },
-      error: () => {
-        this.isBackendOnline.set(false);
-        this.backendStatus.set('Backend Offline (Start Django at :8000)');
-      }
-    });
-  }
-
   public togglePanel(isRegister: boolean): void {
     this.isRegisterActive.set(isRegister);
     this.errorMessage.set(null);
@@ -93,6 +104,23 @@ export class LoginSignupComponent implements OnInit {
     this.selectedRole.set(role);
     this.registerForm.patchValue({ role });
     this.errorMessage.set(null);
+  }
+
+  public toggleLoginPassword(): void {
+    this.showLoginPassword.update(v => !v);
+  }
+
+  public toggleRegisterPassword(): void {
+    this.showRegisterPassword.update(v => !v);
+  }
+
+  public toggleConfirmPassword(): void {
+    this.showConfirmPassword.update(v => !v);
+  }
+
+  public onConfirmPasswordPaste(e: ClipboardEvent): void {
+    e.preventDefault();
+    this.errorMessage.set('For security, please type your confirm password manually.');
   }
 
   public quickFillDemo(role: 'admin' | 'driver' | 'customer'): void {
@@ -118,7 +146,7 @@ export class LoginSignupComponent implements OnInit {
 
     const { username, password } = this.loginForm.value;
 
-    this.authService.login({ username, password }).subscribe({
+    this.authService.login({ username: username.trim(), password }).subscribe({
       next: (res) => {
         this.isLoading.set(false);
         this.successMessage.set(`Welcome back, ${res.user.first_name || res.user.username}! Redirecting...`);
@@ -135,22 +163,56 @@ export class LoginSignupComponent implements OnInit {
   }
 
   public onRegister(): void {
+    // Specific, actionable field-level validation messages
     if (this.registerForm.invalid) {
-      this.errorMessage.set('Please complete all required fields correctly.');
+      const f = this.registerForm.controls;
+      if (f['fullName'].invalid) {
+        this.errorMessage.set('Please enter your Full Name.');
+        return;
+      }
+      if (f['username'].invalid) {
+        this.errorMessage.set('Username must be at least 3 characters.');
+        return;
+      }
+      if (f['email'].invalid) {
+        this.errorMessage.set('Please enter a valid Email address.');
+        return;
+      }
+      if (f['phone'].invalid) {
+        this.errorMessage.set('Please enter your Phone number.');
+        return;
+      }
+      if (f['organization'].invalid) {
+        this.errorMessage.set('Please select your Organization from the dropdown.');
+        return;
+      }
+      if (f['password'].invalid) {
+        this.errorMessage.set('Password must be at least 6 characters.');
+        return;
+      }
+      if (f['confirmPassword'].invalid) {
+        this.errorMessage.set('Confirm Password must be at least 6 characters.');
+        return;
+      }
+      this.errorMessage.set('Please complete all required fields.');
       return;
     }
 
     const val = this.registerForm.value;
 
     if (val.password !== val.confirmPassword) {
-      this.errorMessage.set('Passwords do not match.');
+      this.errorMessage.set('Passwords do not match. Please verify both password fields.');
       return;
     }
 
     const currentRole = this.selectedRole();
     if (currentRole === 'DRIVER') {
-      if (!val.vehicleNumber || !val.licenseNumber) {
-        this.errorMessage.set('Vehicle number and License number are required for Drivers.');
+      if (!val.vehicleNumber || !val.vehicleNumber.trim()) {
+        this.errorMessage.set('Vehicle number is required for Driver registration (e.g. TR-102).');
+        return;
+      }
+      if (!val.licenseNumber || !val.licenseNumber.trim()) {
+        this.errorMessage.set('License ID is required for Driver registration (e.g. DRV-001).');
         return;
       }
     }
@@ -159,25 +221,28 @@ export class LoginSignupComponent implements OnInit {
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
+    // Auto-sanitize spaces in username (e.g. "Bharathi 02" -> "bharathi_02")
+    const sanitizedUsername = (val.username || '').trim().replace(/\s+/g, '_').toLowerCase();
+
     const names = (val.fullName || '').trim().split(' ');
-    const firstName = names[0] || val.username;
+    const firstName = names[0] || sanitizedUsername;
     const lastName = names.slice(1).join(' ') || '';
 
     const payload: any = {
-      username: val.username,
-      email: val.email,
+      username: sanitizedUsername,
+      email: (val.email || '').trim().toLowerCase(),
       password: val.password,
       confirm_password: val.confirmPassword,
       first_name: firstName,
       last_name: lastName,
       role: currentRole,
-      phone_number: val.phone,
+      phone_number: (val.phone || '').trim(),
       organization: val.organization
     };
 
     if (currentRole === 'DRIVER') {
-      payload.vehicle_number = val.vehicleNumber;
-      payload.license_number = val.licenseNumber;
+      payload.vehicle_number = val.vehicleNumber.trim();
+      payload.license_number = val.licenseNumber.trim();
     } else {
       payload.department = val.department || '';
     }
@@ -194,7 +259,10 @@ export class LoginSignupComponent implements OnInit {
         this.isLoading.set(false);
         let msg = 'Registration failed. Please check your inputs.';
         if (err.error) {
-          const errors = Object.entries(err.error).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`);
+          const errors = Object.entries(err.error).map(([k, v]) => {
+            const valStr = Array.isArray(v) ? v.join(', ') : String(v);
+            return `${k}: ${valStr}`;
+          });
           if (errors.length > 0) msg = errors.join(' | ');
         }
         this.errorMessage.set(msg);

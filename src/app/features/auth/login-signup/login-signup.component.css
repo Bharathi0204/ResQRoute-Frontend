@@ -223,6 +223,79 @@ form {
   font-size: 13px;
 }
 
+/* Select Dropdown Styling */
+.input-box select {
+  width: 100%;
+  height: 48px;
+  padding: 11px 40px 11px 16px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  outline: none;
+  font-size: 13.5px;
+  color: #0f172a;
+  font-weight: 500;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.input-box select:focus {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.input-box select option {
+  color: #0f172a;
+  background: #ffffff;
+  font-size: 13.5px;
+  padding: 8px 12px;
+}
+
+.input-box select option[disabled] {
+  color: #94a3b8;
+}
+
+.select-arrow {
+  pointer-events: none;
+  font-size: 20px !important;
+}
+
+/* Eye Visibility Toggle Button */
+.eye-toggle-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.eye-toggle-btn:hover {
+  color: #1e3a8a;
+  background: rgba(30, 58, 138, 0.08);
+}
+
+.eye-toggle-btn i {
+  position: static;
+  transform: none;
+  font-size: 20px;
+  color: inherit;
+}
+
 .input-box i {
   position: absolute;
   right: 14px;

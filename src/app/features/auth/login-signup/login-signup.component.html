@@ -66,14 +66,21 @@
           <i class='bx bxs-user'></i>
         </div>
 
-        <div class="input-box">
+        <div class="input-box password-box">
           <input 
-            type="password" 
+            [type]="showLoginPassword() ? 'text' : 'password'" 
             formControlName="password" 
             placeholder="Password" 
             autocomplete="current-password"
             required>
-          <i class='bx bxs-lock-alt'></i>
+          <button 
+            type="button" 
+            class="eye-toggle-btn" 
+            (click)="toggleLoginPassword()" 
+            [attr.aria-label]="showLoginPassword() ? 'Hide password' : 'Show password'"
+            tabindex="-1">
+            <i class='bx' [class.bx-show]="!showLoginPassword()" [class.bx-hide]="showLoginPassword()"></i>
+          </button>
         </div>
 
         <div class="forgot-link">
@@ -175,9 +182,14 @@
             </div>
           </div>
 
-          <div class="input-box">
-            <input type="text" formControlName="organization" placeholder="Organization (e.g. ASTC / Hospital / NDRF)" required>
-            <i class='bx bxs-business'></i>
+          <div class="input-box select-box">
+            <select formControlName="organization" required>
+              <option value="" disabled selected>Select Organization / Agency</option>
+              @for (org of organizations; track org) {
+                <option [value]="org">{{ org }}</option>
+              }
+            </select>
+            <i class='bx bx-chevron-down select-arrow'></i>
           </div>
 
           <!-- DRIVER-SPECIFIC FIELDS -->
@@ -200,21 +212,49 @@
 
           <!-- CUSTOMER-SPECIFIC FIELDS -->
           @if (selectedRole() === 'CUSTOMER') {
-            <div class="input-box role-specific-box">
-              <input type="text" formControlName="department" placeholder="Department / Hub (e.g. Emergency Logistics)">
-              <i class='bx bxs-building'></i>
+            <div class="input-box select-box role-specific-box">
+              <select formControlName="department">
+                <option value="" disabled selected>Select Department / Logistics Operations</option>
+                @for (dept of departments; track dept) {
+                  <option [value]="dept">{{ dept }}</option>
+                }
+              </select>
+              <i class='bx bx-chevron-down select-arrow'></i>
             </div>
           }
 
           <div class="input-grid">
-            <div class="input-box">
-              <input type="password" formControlName="password" placeholder="Password (min 6)" required>
-              <i class='bx bxs-lock-alt'></i>
+            <div class="input-box password-box">
+              <input 
+                [type]="showRegisterPassword() ? 'text' : 'password'" 
+                formControlName="password" 
+                placeholder="Password (min 6)" 
+                required>
+              <button 
+                type="button" 
+                class="eye-toggle-btn" 
+                (click)="toggleRegisterPassword()" 
+                [attr.aria-label]="showRegisterPassword() ? 'Hide password' : 'Show password'"
+                tabindex="-1">
+                <i class='bx' [class.bx-show]="!showRegisterPassword()" [class.bx-hide]="showRegisterPassword()"></i>
+              </button>
             </div>
 
-            <div class="input-box">
-              <input type="password" formControlName="confirmPassword" placeholder="Confirm Password" required>
-              <i class='bx bxs-check-shield'></i>
+            <div class="input-box password-box">
+              <input 
+                [type]="showConfirmPassword() ? 'text' : 'password'" 
+                formControlName="confirmPassword" 
+                placeholder="Confirm Password (type only)" 
+                (paste)="onConfirmPasswordPaste($event)"
+                required>
+              <button 
+                type="button" 
+                class="eye-toggle-btn" 
+                (click)="toggleConfirmPassword()" 
+                [attr.aria-label]="showConfirmPassword() ? 'Hide password' : 'Show password'"
+                tabindex="-1">
+                <i class='bx' [class.bx-show]="!showConfirmPassword()" [class.bx-hide]="showConfirmPassword()"></i>
+              </button>
             </div>
           </div>
         </div>
