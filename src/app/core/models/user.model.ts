@@ -11,6 +11,8 @@ export interface DriverProfile {
   license_number: string;
   license_issuing_state?: string;
   license_expiry?: string | null;
+  state?: string;
+  district?: string;
   is_available: boolean;
   is_verified: boolean;
 }
@@ -19,6 +21,7 @@ export interface CustomerProfile {
   id?: number;
   area_type?: AreaType;
   locality_name?: string;
+  district?: string;
   pincode?: string;
   state?: string;
   department?: string;
@@ -31,6 +34,7 @@ export interface AuthorityProfile {
   designation: string;
   department_name: string;
   jurisdiction_state: string;
+  district_office?: string;
   office_address?: string;
   approval_status: ApprovalStatus;
   approved_by?: string | null;
@@ -115,3 +119,157 @@ export interface HealthResponse {
   database_engine?: string;
   database_host?: string;
 }
+
+export interface ForgotPasswordPayload {
+  role: UserRole;
+  phone_number?: string;
+  email?: string;
+  official_id?: string;
+  reason?: string;
+}
+
+export interface ForgotPasswordResponse {
+  status: 'success' | 'pending_superadmin';
+  role: UserRole;
+  target?: string;
+  channel?: 'SMS' | 'EMAIL' | 'SUPERADMIN';
+  temp_password?: string;
+  message: string;
+}
+
+export interface ChangePasswordPayload {
+  current_password: string;
+  new_password: string;
+  confirm_new_password: string;
+}
+
+export interface OfficialResetRequestItem {
+  id: number;
+  username: string;
+  full_name: string;
+  official_id: string;
+  email?: string;
+  designation: string;
+  department: string;
+  state: string;
+  reason: string;
+  status: ApprovalStatus;
+  temp_password?: string;
+  requested_at: string;
+  resolved_at?: string;
+}
+
+export const NE_STATE_DISTRICTS_MAP: Record<string, string[]> = {
+  'Assam': [
+    'Kamrup Metropolitan',
+    'Kamrup Rural',
+    'Dima Hasao (Haflong)',
+    'Cachar (Silchar)',
+    'Dibrugarh',
+    'Jorhat',
+    'Nagaon',
+    'Sonitpur (Tezpur)',
+    'Tinsukia',
+    'Barpeta',
+    'Karbi Anglong',
+    'Karimganj',
+    'Hailakandi',
+    'Bongaigaon',
+    'Dhubri',
+    'Golaghat',
+    'Sivasagar',
+    'Goalpara',
+    'Morigaon',
+    'Darrang',
+    'Udalguri',
+    'Baksa',
+    'Chirang',
+    'Kokrajhar'
+  ],
+  'Sikkim': [
+    'Gangtok (East Sikkim)',
+    'Mangan (North Sikkim)',
+    'Pakyong',
+    'Namchi (South Sikkim)',
+    'Gyalshing / Geyzing (West Sikkim)',
+    'Soreng'
+  ],
+  'Arunachal Pradesh': [
+    'Tawang',
+    'West Kameng (Bomdila)',
+    'East Kameng',
+    'Papum Pare (Itanagar)',
+    'Lower Subansiri (Ziro)',
+    'Upper Subansiri',
+    'West Siang',
+    'East Siang (Pasighat)',
+    'Lohit (Tezu)',
+    'Changlang',
+    'Tirap',
+    'Namsai'
+  ],
+  'Meghalaya': [
+    'East Khasi Hills (Shillong)',
+    'West Khasi Hills',
+    'Ri-Bhoi (Nongpoh)',
+    'West Jaintia Hills (Jowai)',
+    'East Jaintia Hills',
+    'West Garo Hills (Tura)',
+    'East Garo Hills',
+    'South Garo Hills'
+  ],
+  'Manipur': [
+    'Imphal East',
+    'Imphal West',
+    'Bishnupur',
+    'Thoubal',
+    'Churachandpur',
+    'Senapati',
+    'Ukhrul',
+    'Chandel',
+    'Tamenglong',
+    'Jiribam',
+    'Noney',
+    'Kangpokpi',
+    'Tengnoupal'
+  ],
+  'Nagaland': [
+    'Kohima',
+    'Dimapur',
+    'Mokokchung',
+    'Tuensang',
+    'Mon',
+    'Wokha',
+    'Zunheboto',
+    'Phek',
+    'Peren',
+    'Kiphire',
+    'Longleng',
+    'Chümoukedima',
+    'Niuland'
+  ],
+  'Mizoram': [
+    'Aizawl',
+    'Lunglei',
+    'Saiha',
+    'Champhai',
+    'Kolasib',
+    'Serchhip',
+    'Lawngtlai',
+    'Mamit',
+    'Hnahthial',
+    'Khawzawl',
+    'Saitual'
+  ],
+  'Tripura': [
+    'West Tripura (Agartala)',
+    'North Tripura (Dharmanagar)',
+    'South Tripura',
+    'Dhalai (Ambassa)',
+    'Unakoti (Kailashahar)',
+    'Khowai',
+    'Sepahijala',
+    'Gomati (Udaipur)'
+  ]
+};
+

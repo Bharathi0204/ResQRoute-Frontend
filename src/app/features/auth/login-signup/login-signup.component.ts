@@ -1,14 +1,14 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { UserRole } from '../../../core/models/user.model';
+import { UserRole, NE_STATE_DISTRICTS_MAP, ForgotPasswordResponse } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-login-signup',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './login-signup.component.html',
   styleUrls: ['./login-signup.component.css']
 })
@@ -17,43 +17,40 @@ export class LoginSignupComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  // Toggle active state for sliding animation
-  public isRegisterActive = signal<boolean>(false);
+  // Active View Mode: 'signup' | 'signin' | 'forgot'
+  public viewMode = signal<'signup' | 'signin' | 'forgot'>('signup');
 
   // Selected Role for Registration & Login: CUSTOMER, DRIVER, or ADMIN
-  public selectedRole = signal<UserRole>('CUSTOMER');
+  public selectedRole = signal<UserRole>('DRIVER');
 
   // Password Visibility Toggles
   public showLoginPassword = signal<boolean>(false);
   public showRegisterPassword = signal<boolean>(false);
   public showConfirmPassword = signal<boolean>(false);
 
-  // Driving License Visual Specimen Modal (Matches user reference image)
+  // Driving License Visual Specimen Modal
   public showLicenseExampleModal = signal<boolean>(false);
 
-  // Loading & Error States
+  // Loading & Feedback States
   public isLoading = signal<boolean>(false);
   public errorMessage = signal<string | null>(null);
   public successMessage = signal<string | null>(null);
 
-  // 8 North Eastern States (MDoNER Corridor Scope)
-  public neStates: string[] = [
-    'Assam',
-    'Meghalaya',
-    'Sikkim',
-    'Arunachal Pradesh',
-    'Nagaland',
-    'Manipur',
-    'Mizoram',
-    'Tripura'
-  ];
+  // 8 North Eastern States (MDoNER Scope)
+  public neStates: string[] = Object.keys(NE_STATE_DISTRICTS_MAP);
+  public selectedState = signal<string>('Assam');
 
-  // Driver Vehicle Specifications with interactive avatars/icons
+  // Dynamic cascading districts for currently selected state
+  public availableDistricts = computed(() => {
+    return NE_STATE_DISTRICTS_MAP[this.selectedState()] || [];
+  });
+
+  // Driver Vehicle Specifications
   public vehicleTypes = [
-    { id: 'Heavy Emergency Truck', name: 'Heavy Emergency Truck (6-10W)', icon: 'bxs-truck', desc: 'Bulk rations & emergency heavy payload' },
-    { id: 'Medium Relief Carrier', name: 'Medium Relief Carrier (4-6W)', icon: 'bx-package', desc: 'Disaster supplies & medical boxes' },
-    { id: 'Quick Medical Van', name: 'Quick Response Medical Van', icon: 'bxs-ambulance', desc: 'Vaccines, blood units & cold-chain' },
-    { id: 'All-Terrain 4x4', name: 'All-Terrain 4x4 Hill Vehicle', icon: 'bxs-car', desc: 'Landslide & mountainous dirt corridors' },
+    { id: 'Heavy Emergency Truck', name: 'Heavy Emergency Truck (6-10W)', icon: 'bxs-truck' },
+    { id: 'Medium Relief Carrier', name: 'Medium Relief Carrier (4-6W)', icon: 'bx-package' },
+    { id: 'Quick Medical Van', name: 'Quick Response Medical Van', icon: 'bxs-ambulance' },
+    { id: 'All-Terrain 4x4', name: 'All-Terrain 4x4 Mountain Rover', icon: 'bxs-car' },
   ];
   public selectedVehicleType = signal<string>('Heavy Emergency Truck');
 
@@ -68,6 +65,15 @@ export class LoginSignupComponent implements OnInit {
     'Health & Family Welfare / District Civil Hospital',
     'District Collector / Magistrate Administration'
   ];
+
+  // Forgot Password States
+  public forgotRole = signal<UserRole>('DRIVER');
+  public forgotPhone = signal<string>('');
+  public forgotEmail = signal<string>('');
+  public forgotOfficialId = signal<string>('');
+  public forgotReason = signal<string>('');
+  public forgotLoading = signal<boolean>(false);
+  public forgotResponse = signal<ForgotPasswordResponse | null>(null);
 
   // Reactive Forms
   public loginForm!: FormGroup;
@@ -86,34 +92,37 @@ export class LoginSignupComponent implements OnInit {
   private initForms(): void {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
-      password: ['', [Validators.required, Validators.minLength(4)]]
+      password: ['', [Validators.required, Validators.minLength(4)]],
+      role: ['']
     });
 
     this.registerForm = this.fb.group({
-      role: ['CUSTOMER', [Validators.required]],
+      role: ['DRIVER', [Validators.required]],
       fullName: ['', [Validators.required]],
       username: ['', [Validators.required, Validators.minLength(3)]],
-      // Email is optional for drivers, required for customer/admin
       email: [''],
       phone: ['', [Validators.required]],
       
+      // Location details (Cascading State & District)
+      state: ['Assam', [Validators.required]],
+      district: ['Kamrup Metropolitan', [Validators.required]],
+
       // Customer specific
       areaType: ['CITY'],
       localityName: [''],
       pincode: [''],
-      state: [''],
 
       // Driver specific
       vehicleType: ['Heavy Emergency Truck'],
       vehicleNumber: [''],
       licenseNumber: [''],
-      licenseIssuingState: [''],
+      licenseExpiry: [''],
 
       // Government Authority specific
       officialId: [''],
       designation: [''],
-      departmentName: [''],
-      jurisdictionState: [''],
+      departmentName: [this.authorityDepartments[0]],
+      districtOffice: [''],
       officeAddress: [''],
 
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -121,16 +130,33 @@ export class LoginSignupComponent implements OnInit {
     });
   }
 
-  public togglePanel(isRegister: boolean): void {
-    this.isRegisterActive.set(isRegister);
+  public setViewMode(mode: 'signup' | 'signin' | 'forgot'): void {
+    this.viewMode.set(mode);
     this.errorMessage.set(null);
     this.successMessage.set(null);
+    this.forgotResponse.set(null);
   }
 
   public setRole(role: UserRole): void {
     this.selectedRole.set(role);
+    this.forgotRole.set(role);
     this.registerForm.patchValue({ role });
     this.errorMessage.set(null);
+  }
+
+  public setForgotRole(role: UserRole): void {
+    this.forgotRole.set(role);
+    this.errorMessage.set(null);
+    this.forgotResponse.set(null);
+  }
+
+  public onStateChange(newState: string): void {
+    this.selectedState.set(newState);
+    this.registerForm.patchValue({ state: newState });
+    const dists = NE_STATE_DISTRICTS_MAP[newState] || [];
+    if (dists.length > 0) {
+      this.registerForm.patchValue({ district: dists[0], districtOffice: dists[0] });
+    }
   }
 
   public selectVehicleType(typeId: string): void {
@@ -181,7 +207,7 @@ export class LoginSignupComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading.set(false);
-        const detail = err.error?.detail || 'Invalid username or password. Please try again.';
+        const detail = err.error?.detail || 'Invalid credentials. Please verify your username and password.';
         this.errorMessage.set(detail);
       }
     });
@@ -213,35 +239,27 @@ export class LoginSignupComponent implements OnInit {
         return;
       }
       if (!this.registerForm.value.localityName || !this.registerForm.value.localityName.trim()) {
-        this.errorMessage.set('Please enter your City or Village name.');
+        this.errorMessage.set('Please enter your City or Town name.');
         return;
       }
       if (!this.registerForm.value.pincode || !this.registerForm.value.pincode.trim()) {
         this.errorMessage.set('Please enter your 6-digit postal Pincode.');
         return;
       }
-      if (!this.registerForm.value.state) {
-        this.errorMessage.set('Please select your North Eastern State.');
-        return;
-      }
     } else if (currentRole === 'DRIVER') {
       // Email is OPTIONAL for field drivers!
       if (!this.registerForm.value.vehicleNumber || !this.registerForm.value.vehicleNumber.trim()) {
-        this.errorMessage.set('Vehicle identifier is required for Field Drivers (e.g. TR-102).');
+        this.errorMessage.set('Vehicle identifier is required (e.g. AS01EC1234).');
         return;
       }
       if (!this.registerForm.value.licenseNumber || !this.registerForm.value.licenseNumber.trim()) {
-        this.errorMessage.set('Driving License number is required (e.g. TN01 20190001234). Use "View Example" if needed.');
+        this.errorMessage.set('Driving License number is required. Click (?) to view example.');
         return;
       }
     } else if (currentRole === 'ADMIN') {
       const emailVal = (this.registerForm.value.email || '').trim();
       if (!emailVal || !emailVal.includes('@')) {
-        this.errorMessage.set('Official government/agency email is required.');
-        return;
-      }
-      if (!this.registerForm.value.officialId || !this.registerForm.value.officialId.trim()) {
-        this.errorMessage.set('Please enter your Government Employee ID / Service Badge Code.');
+        this.errorMessage.set('Official government or agency email is required.');
         return;
       }
       if (!this.registerForm.value.designation || !this.registerForm.value.designation.trim()) {
@@ -250,10 +268,6 @@ export class LoginSignupComponent implements OnInit {
       }
       if (!this.registerForm.value.departmentName) {
         this.errorMessage.set('Please select your Government Department or Ministry.');
-        return;
-      }
-      if (!this.registerForm.value.jurisdictionState) {
-        this.errorMessage.set('Please select your Jurisdiction State.');
         return;
       }
     }
@@ -277,9 +291,7 @@ export class LoginSignupComponent implements OnInit {
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
-    // Auto-sanitize spaces in username (e.g. "Bharathi 02" -> "bharathi_02")
     const sanitizedUsername = (val.username || '').trim().replace(/\s+/g, '_').toLowerCase();
-
     const names = (val.fullName || '').trim().split(' ');
     const firstName = names[0] || sanitizedUsername;
     const lastName = names.slice(1).join(' ') || '';
@@ -293,24 +305,27 @@ export class LoginSignupComponent implements OnInit {
       last_name: lastName,
       role: currentRole,
       phone_number: (val.phone || '').trim(),
+      state: val.state,
+      district: val.district
     };
 
     if (currentRole === 'CUSTOMER') {
       payload.area_type = val.areaType || 'CITY';
       payload.locality_name = (val.localityName || '').trim();
       payload.pincode = (val.pincode || '').trim();
-      payload.state = val.state;
-      payload.delivery_address = `${val.localityName}, ${val.state} - ${val.pincode}`;
+      payload.delivery_address = `${val.localityName}, ${val.district}, ${val.state} - ${val.pincode}`;
     } else if (currentRole === 'DRIVER') {
       payload.vehicle_type = this.selectedVehicleType();
       payload.vehicle_number = (val.vehicleNumber || '').trim();
       payload.license_number = (val.licenseNumber || '').trim();
-      payload.license_issuing_state = val.licenseIssuingState || '';
+      payload.license_issuing_state = val.state;
+      payload.license_expiry = val.licenseExpiry || null;
     } else if (currentRole === 'ADMIN') {
       payload.official_id = (val.officialId || '').trim();
       payload.designation = (val.designation || '').trim();
       payload.department_name = val.departmentName;
-      payload.jurisdiction_state = val.jurisdictionState;
+      payload.jurisdiction_state = val.state;
+      payload.district_office = val.districtOffice || val.district;
       payload.office_address = (val.officeAddress || '').trim();
       payload.organization = val.departmentName;
     }
@@ -319,9 +334,9 @@ export class LoginSignupComponent implements OnInit {
       next: (res) => {
         this.isLoading.set(false);
         if (currentRole === 'ADMIN') {
-          this.successMessage.set('Government Official account created! Your registration is queued for Superadmin approval. You will receive login access once authorized.');
+          this.successMessage.set('Government Official registration submitted! Your request is queued for Superadmin clearance.');
           setTimeout(() => {
-            this.togglePanel(false);
+            this.setViewMode('signin');
           }, 2500);
         } else {
           this.successMessage.set(`Account created successfully as ${res.user.role}! Redirecting...`);
@@ -332,7 +347,7 @@ export class LoginSignupComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading.set(false);
-        let msg = 'Registration failed. Please check your inputs.';
+        let msg = 'Registration failed. Please verify your inputs.';
         if (err.error) {
           if (typeof err.error === 'string') {
             msg = err.error;
@@ -349,4 +364,59 @@ export class LoginSignupComponent implements OnInit {
       }
     });
   }
+
+  public onForgotPasswordSubmit(): void {
+    const role = this.forgotRole();
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+    this.forgotResponse.set(null);
+
+    const payload: any = { role };
+
+    if (role === 'DRIVER') {
+      if (!this.forgotPhone().trim()) {
+        this.errorMessage.set('Please enter your registered mobile number.');
+        return;
+      }
+      payload.phone_number = this.forgotPhone().trim();
+    } else if (role === 'CUSTOMER') {
+      if (!this.forgotEmail().trim() || !this.forgotEmail().includes('@')) {
+        this.errorMessage.set('Please enter your registered Gmail or email address.');
+        return;
+      }
+      payload.email = this.forgotEmail().trim().toLowerCase();
+    } else if (role === 'ADMIN') {
+      if (!this.forgotOfficialId().trim() && !this.forgotEmail().trim()) {
+        this.errorMessage.set('Please enter your Official Badge ID or Official Email.');
+        return;
+      }
+      payload.official_id = this.forgotOfficialId().trim();
+      payload.email = this.forgotEmail().trim().toLowerCase();
+      payload.reason = this.forgotReason().trim() || 'Password recovery requested by official';
+    }
+
+    this.forgotLoading.set(true);
+    this.authService.forgotPassword(payload).subscribe({
+      next: (res) => {
+        this.forgotLoading.set(false);
+        this.forgotResponse.set(res);
+        this.successMessage.set(res.message);
+      },
+      error: (err) => {
+        this.forgotLoading.set(false);
+        const detail = err.error?.detail || err.error?.phone_number || err.error?.email || err.error?.official_id || 'Failed to process password reset request.';
+        this.errorMessage.set(Array.isArray(detail) ? detail.join(', ') : String(detail));
+      }
+    });
+  }
+
+  public fillCredentialsAndSignIn(usernameOrPhone: string, tempPass: string): void {
+    this.loginForm.patchValue({
+      username: usernameOrPhone,
+      password: tempPass
+    });
+    this.setViewMode('signin');
+    this.successMessage.set('Temporary password auto-filled! Click "Sign In" to access your dashboard and update your password.');
+  }
 }
+

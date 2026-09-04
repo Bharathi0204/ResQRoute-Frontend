@@ -2,7 +2,18 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, throwError, of } from 'rxjs';
-import { User, AuthResponse, HealthResponse, UserRole, AuthorityRequestItem, RerouteReportsData } from '../models/user.model';
+import { 
+  User, 
+  AuthResponse, 
+  HealthResponse, 
+  UserRole, 
+  AuthorityRequestItem, 
+  RerouteReportsData,
+  ForgotPasswordPayload,
+  ForgotPasswordResponse,
+  ChangePasswordPayload,
+  OfficialResetRequestItem
+} from '../models/user.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -65,12 +76,28 @@ export class AuthService {
     );
   }
 
+  public forgotPassword(payload: ForgotPasswordPayload): Observable<ForgotPasswordResponse> {
+    return this.http.post<ForgotPasswordResponse>(`${this.apiUrl}/api/auth/forgot-password/`, payload);
+  }
+
+  public changePassword(payload: ChangePasswordPayload): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/api/auth/change-password/`, payload);
+  }
+
   public getAuthorityRequests(): Observable<AuthorityRequestItem[]> {
     return this.http.get<AuthorityRequestItem[]>(`${this.apiUrl}/api/auth/authority-requests/`);
   }
 
   public actOnAuthorityRequest(id: number, action: 'approve' | 'reject'): Observable<any> {
     return this.http.post(`${this.apiUrl}/api/auth/authority-requests/${id}/action/`, { action });
+  }
+
+  public getOfficialResetRequests(): Observable<OfficialResetRequestItem[]> {
+    return this.http.get<OfficialResetRequestItem[]>(`${this.apiUrl}/api/auth/official-reset-requests/`);
+  }
+
+  public actOnOfficialResetRequest(id: number, action: 'approve' | 'reject'): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/auth/official-reset-requests/${id}/action/`, { action });
   }
 
   public getRerouteReports(): Observable<RerouteReportsData> {

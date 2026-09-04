@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
-import { HealthResponse, AuthorityRequestItem, RerouteReportsData, StateRerouteReport, CorridorRerouteLog } from '../../core/models/user.model';
+import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, RerouteReportsData, StateRerouteReport, CorridorRerouteLog } from '../../core/models/user.model';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -60,6 +60,16 @@ import { HealthResponse, AuthorityRequestItem, RerouteReportsData, StateRerouteR
             [class.active]="activeTab() === 'directory'" 
             (click)="setActiveTab('directory')">
             <i class='bx bx-id-card'></i> 20 Verified NE Authorities Directory
+          </button>
+
+          <button 
+            class="tab-btn" 
+            [class.active]="activeTab() === 'resets'" 
+            (click)="setActiveTab('resets')">
+            <i class='bx bx-key'></i> Official Password Resets
+            <span class="pill-badge pending" *ngIf="pendingResetsCount() > 0">
+              {{ pendingResetsCount() }} Pending
+            </span>
           </button>
 
           <button 
@@ -415,7 +425,132 @@ import { HealthResponse, AuthorityRequestItem, RerouteReportsData, StateRerouteR
         </div>
 
         <!-- ============================================================ -->
-        <!-- TAB 4: SYSTEM INFRASTRUCTURE OVERVIEW                        -->
+        <!-- TAB 4: OFFICIAL PASSWORD RESET REQUESTS (SUPERADMIN ACTIONS) -->
+        <!-- ============================================================ -->
+        <div *ngIf="activeTab() === 'resets'" class="tab-content fade-in">
+          <div class="section-header">
+            <div>
+              <h3 class="section-title"><i class='bx bx-lock-open-alt'></i> Government & Authority Password Reset Review Queue</h3>
+              <p class="section-subtitle">
+                Official personnel request Superadmin review to reset credentials. Approving generates a secure temporary password.
+              </p>
+            </div>
+            <button class="refresh-btn" (click)="loadOfficialResetRequests()">
+              <i class='bx bx-refresh'></i> Refresh Resets
+            </button>
+          </div>
+
+          <!-- Pending Resets List -->
+          <div *ngIf="pendingResets().length > 0; else noPendingResetsBlock" class="requests-grid">
+            <div *ngFor="let req of pendingResets()" class="request-card">
+              <div class="request-header">
+                <div class="badge-code"><i class='bx bx-id-card'></i> {{ req.official_id }}</div>
+                <span class="badge-status pending">Pending Review</span>
+              </div>
+
+              <div class="request-body">
+                <h4 class="official-name">{{ req.full_name }}</h4>
+                <div class="designation-text">{{ req.designation }}</div>
+                <div class="dept-text"><i class='bx bxs-institution'></i> {{ req.department }}</div>
+
+                <div class="meta-row">
+                  <div>
+                    <span class="meta-label">State:</span>
+                    <span class="meta-value">{{ req.state }}</span>
+                  </div>
+                  <div>
+                    <span class="meta-label">Username:</span>
+                    <span class="meta-value">{{ req.username }}</span>
+                  </div>
+                </div>
+
+                <div class="meta-row" *ngIf="req.email">
+                  <div>
+                    <span class="meta-label">Official Email:</span>
+                    <span class="meta-value">{{ req.email }}</span>
+                  </div>
+                  <div>
+                    <span class="meta-label">Requested:</span>
+                    <span class="meta-value">{{ req.requested_at | date:'short' }}</span>
+                  </div>
+                </div>
+
+                <div class="address-box">
+                  <strong>Reason:</strong> {{ req.reason }}
+                </div>
+              </div>
+
+              <div class="request-actions">
+                <button 
+                  class="btn-approve" 
+                  [disabled]="loadingResetAction() === req.id"
+                  (click)="handleOfficialResetAction(req.id, 'approve')">
+                  <i class='bx bx-check-shield'></i> Approve & Generate Temp Password
+                </button>
+                <button 
+                  class="btn-reject" 
+                  [disabled]="loadingResetAction() === req.id"
+                  (click)="handleOfficialResetAction(req.id, 'reject')">
+                  <i class='bx bx-x'></i> Reject
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noPendingResetsBlock>
+            <div class="empty-state-card">
+              <i class='bx bx-check-double text-success'></i>
+              <h4>No Pending Password Resets</h4>
+              <p>All government authority password reset requests have been verified and processed.</p>
+            </div>
+          </ng-template>
+
+          <!-- History / Resolved Resets Table -->
+          <div class="section-container" *ngIf="resolvedResets().length > 0" style="margin-top: 32px;">
+            <div class="section-header">
+              <div>
+                <h4 class="section-title"><i class='bx bx-history'></i> Processed Official Password Resets</h4>
+                <p class="section-subtitle">History of approved temporary passwords and rejected requests</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Official</th>
+                    <th>Official ID</th>
+                    <th>State</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Temporary Password</th>
+                    <th>Resolved Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let r of resolvedResets()">
+                    <td><strong>{{ r.full_name }}</strong> ({{ r.username }})</td>
+                    <td><span class="code-pill">{{ r.official_id }}</span></td>
+                    <td>{{ r.state }}</td>
+                    <td>{{ r.reason }}</td>
+                    <td>
+                      <span class="status-pill" [class.success]="r.status === 'APPROVED'" [class.rejected]="r.status === 'REJECTED'">
+                        {{ r.status }}
+                      </span>
+                    </td>
+                    <td>
+                      <code *ngIf="r.temp_password" class="temp-pass-code">{{ r.temp_password }}</code>
+                      <span *ngIf="!r.temp_password" class="text-muted">—</span>
+                    </td>
+                    <td><small class="time-text">{{ r.resolved_at | date:'short' }}</small></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB 5: SYSTEM INFRASTRUCTURE OVERVIEW                        -->
         <!-- ============================================================ -->
         <div *ngIf="activeTab() === 'overview'" class="tab-content fade-in">
           <div class="hero-card">
@@ -1458,6 +1593,20 @@ import { HealthResponse, AuthorityRequestItem, RerouteReportsData, StateRerouteR
       line-height: 1.6;
     }
 
+    .temp-pass-code {
+      background: #0f172a;
+      color: #38bdf8;
+      border: 1px solid #0284c7;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+    .status-pill.rejected {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
     .fade-in {
       animation: fadeIn 0.3s ease-in-out;
     }
@@ -1471,13 +1620,15 @@ export class AdminDashboardComponent implements OnInit {
   private authService = inject(AuthService);
   public user = this.authService.currentUser;
 
-  public activeTab = signal<'reports' | 'requests' | 'directory' | 'overview'>('reports');
+  public activeTab = signal<'reports' | 'requests' | 'resets' | 'directory' | 'overview'>('reports');
   public healthData = signal<HealthResponse | null>(null);
   public rerouteData = signal<RerouteReportsData | null>(null);
   public authorityRequests = signal<AuthorityRequestItem[]>([]);
+  public officialResetRequests = signal<OfficialResetRequestItem[]>([]);
   public selectedState = signal<string>('ALL');
   public searchQuery = signal<string>('');
   public loadingAction = signal<number | null>(null);
+  public loadingResetAction = signal<number | null>(null);
   public actionMessage = signal<string | null>(null);
 
   public pendingRequests = computed(() => 
@@ -1485,6 +1636,16 @@ export class AdminDashboardComponent implements OnInit {
   );
 
   public pendingRequestsCount = computed(() => this.pendingRequests().length);
+
+  public pendingResets = computed(() => 
+    this.officialResetRequests().filter(r => r.status === 'PENDING')
+  );
+
+  public pendingResetsCount = computed(() => this.pendingResets().length);
+
+  public resolvedResets = computed(() => 
+    this.officialResetRequests().filter(r => r.status !== 'PENDING')
+  );
 
   public filteredStateReports = computed(() => {
     const data = this.rerouteData();
@@ -1523,9 +1684,10 @@ export class AdminDashboardComponent implements OnInit {
 
     this.loadRerouteReports();
     this.loadAuthorityRequests();
+    this.loadOfficialResetRequests();
   }
 
-  public setActiveTab(tab: 'reports' | 'requests' | 'directory' | 'overview'): void {
+  public setActiveTab(tab: 'reports' | 'requests' | 'resets' | 'directory' | 'overview'): void {
     this.activeTab.set(tab);
   }
 
@@ -1543,6 +1705,13 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
+  public loadOfficialResetRequests(): void {
+    this.authService.getOfficialResetRequests().subscribe({
+      next: (requests) => this.officialResetRequests.set(requests),
+      error: (err) => console.error('Error fetching official reset requests:', err)
+    });
+  }
+
   public handleApproval(id: number, action: 'approve' | 'reject'): void {
     this.loadingAction.set(id);
     this.authService.actOnAuthorityRequest(id, action).subscribe({
@@ -1555,6 +1724,26 @@ export class AdminDashboardComponent implements OnInit {
       error: (err) => {
         this.actionMessage.set(err.error?.detail || `Failed to ${action} request.`);
         this.loadingAction.set(null);
+      }
+    });
+  }
+
+  public handleOfficialResetAction(id: number, action: 'approve' | 'reject'): void {
+    this.loadingResetAction.set(id);
+    this.authService.actOnOfficialResetRequest(id, action).subscribe({
+      next: (res) => {
+        let msg = res.message || `Official password reset ${action}d successfully.`;
+        if (res.temp_password) {
+          msg += ` | Generated Temporary Password: [ ${res.temp_password} ]`;
+        }
+        this.actionMessage.set(msg);
+        this.loadingResetAction.set(null);
+        this.loadOfficialResetRequests();
+        setTimeout(() => this.actionMessage.set(null), 8000);
+      },
+      error: (err) => {
+        this.actionMessage.set(err.error?.detail || `Failed to ${action} official reset request.`);
+        this.loadingResetAction.set(null);
       }
     });
   }
