@@ -1,20 +1,47 @@
 <div class="auth-page-wrapper">
-  <!-- System Status Top Bar -->
-  <div class="system-status-bar" [class.online]="isBackendOnline()">
-    <span class="pulse-dot"></span>
-    <span>{{ backendStatus() }}</span>
-  </div>
-
+  
+  <!-- Main Sliding Container (Desktop & Tablet) -->
   <div class="container" [class.active]="isRegisterActive()">
     
+    <!-- MOBILE HEADER & SEGMENTED SWITCH (Visible on Mobile Screens) -->
+    <div class="mobile-app-header">
+      <div class="mobile-brand">
+        <div class="mobile-logo-icon">
+          <i class='bx bxs-navigation'></i>
+        </div>
+        <div>
+          <div class="mobile-title">RESQROUTE</div>
+          <div class="mobile-subtitle">SIH26002 • Northeast Logistics Corridor</div>
+        </div>
+      </div>
+      
+      <!-- Mobile Segmented Controller -->
+      <div class="mobile-segmented-control">
+        <button 
+          type="button" 
+          class="seg-btn" 
+          [class.active]="!isRegisterActive()" 
+          (click)="togglePanel(false)">
+          <i class='bx bxs-log-in-circle'></i> Sign In
+        </button>
+        <button 
+          type="button" 
+          class="seg-btn" 
+          [class.active]="isRegisterActive()" 
+          (click)="togglePanel(true)">
+          <i class='bx bxs-user-plus'></i> Register
+        </button>
+      </div>
+    </div>
+
     <!-- LOGIN FORM BOX -->
-    <div class="form-box login">
+    <div class="form-box login" [class.mobile-hidden]="isRegisterActive()">
       <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
         <div class="brand-badge">
           <i class='bx bxs-shield-plus'></i> RESQROUTE
         </div>
-        <h1>Login</h1>
-        <p class="subtitle">Enter your credentials to access logistics intelligence</p>
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Guwahati → Silchar Demonstration Corridor</p>
 
         <!-- Status Alerts -->
         @if (errorMessage()) {
@@ -29,17 +56,28 @@
         }
 
         <div class="input-box">
-          <input type="text" formControlName="username" placeholder="Username or Email" required>
+          <input 
+            type="text" 
+            formControlName="username" 
+            placeholder="Username or Email" 
+            autocomplete="username"
+            autocapitalize="none"
+            required>
           <i class='bx bxs-user'></i>
         </div>
 
         <div class="input-box">
-          <input type="password" formControlName="password" placeholder="Password" required>
+          <input 
+            type="password" 
+            formControlName="password" 
+            placeholder="Password" 
+            autocomplete="current-password"
+            required>
           <i class='bx bxs-lock-alt'></i>
         </div>
 
         <div class="forgot-link">
-          <a href="javascript:void(0)" (click)="errorMessage.set('Please contact your administrator or fleet manager to reset credentials.')">Forgot Password?</a>
+          <a href="javascript:void(0)" (click)="errorMessage.set('Contact administrator to reset credentials.')">Forgot Password?</a>
         </div>
 
         <button type="submit" class="btn" [disabled]="isLoading()">
@@ -50,9 +88,9 @@
           }
         </button>
 
-        <!-- Quick Demo Switcher -->
+        <!-- Quick Demo Switcher (Instant Evaluation for Judges) -->
         <div class="demo-accounts">
-          <p class="demo-title">Fast Demo Logins:</p>
+          <p class="demo-title">Fast Judge & Invalidator Logins:</p>
           <div class="demo-chips">
             <button type="button" class="chip driver" (click)="quickFillDemo('driver')">
               <i class='bx bxs-truck'></i> Driver (TR-102)
@@ -68,18 +106,19 @@
 
         <div class="mobile-toggle-switch">
           Don't have an account? 
-          <a href="javascript:void(0)" (click)="togglePanel(true)">Register Now</a>
+          <a href="javascript:void(0)" (click)="togglePanel(true)">Create one now</a>
         </div>
       </form>
     </div>
 
     <!-- REGISTRATION FORM BOX -->
-    <div class="form-box register">
+    <div class="form-box register" [class.mobile-hidden]="!isRegisterActive()">
       <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
         <div class="brand-badge">
           <i class='bx bxs-shield-plus'></i> RESQROUTE
         </div>
         <h1>Create Account</h1>
+        <p class="subtitle">Select your role to access corridor dispatch</p>
         
         <!-- Role Selector Switch -->
         <div class="role-selector">
@@ -88,7 +127,7 @@
             class="role-pill" 
             [class.active]="selectedRole() === 'CUSTOMER'"
             (click)="setRole('CUSTOMER')">
-            <i class='bx bxs-user'></i> Customer / Operations
+            <i class='bx bxs-user'></i> Customer / Requester
           </button>
           <button 
             type="button" 
@@ -119,19 +158,19 @@
             </div>
 
             <div class="input-box">
-              <input type="text" formControlName="username" placeholder="Username" required>
+              <input type="text" formControlName="username" placeholder="Username" autocapitalize="none" required>
               <i class='bx bxs-user'></i>
             </div>
           </div>
 
           <div class="input-grid">
             <div class="input-box">
-              <input type="email" formControlName="email" placeholder="Email Address" required>
+              <input type="email" formControlName="email" placeholder="Email Address" autocapitalize="none" required>
               <i class='bx bxs-envelope'></i>
             </div>
 
             <div class="input-box">
-              <input type="text" formControlName="phone" placeholder="Phone Number" required>
+              <input type="tel" formControlName="phone" placeholder="Phone Number" required>
               <i class='bx bxs-phone'></i>
             </div>
           </div>
@@ -143,14 +182,17 @@
 
           <!-- DRIVER-SPECIFIC FIELDS -->
           @if (selectedRole() === 'DRIVER') {
+            <div class="driver-fields-banner">
+              <i class='bx bxs-truck'></i> Driver & Vehicle Specification
+            </div>
             <div class="input-grid role-specific-grid">
               <div class="input-box">
                 <input type="text" formControlName="vehicleNumber" placeholder="Assigned Vehicle (e.g. TR-102)" required>
-                <i class='bx bxs-truck'></i>
+                <i class='bx bxs-car'></i>
               </div>
 
               <div class="input-box">
-                <input type="text" formControlName="licenseNumber" placeholder="License / Driver ID (e.g. DRV-001)" required>
+                <input type="text" formControlName="licenseNumber" placeholder="Driver License ID (e.g. DRV-001)" required>
                 <i class='bx bxs-badge-check'></i>
               </div>
             </div>
@@ -187,12 +229,12 @@
 
         <div class="mobile-toggle-switch">
           Already registered? 
-          <a href="javascript:void(0)" (click)="togglePanel(false)">Log In</a>
+          <a href="javascript:void(0)" (click)="togglePanel(false)">Log in here</a>
         </div>
       </form>
     </div>
 
-    <!-- SLIDING TOGGLE BOX OVERLAY (MATCHING 33-LOGIN DESIGN) -->
+    <!-- SLIDING TOGGLE BOX OVERLAY (Desktop & Large Screens) -->
     <div class="toggle-box">
       <div class="toggle-panel toggle-left">
         <div class="panel-icon">
