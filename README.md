@@ -1,59 +1,31 @@
-# Frontend
+# ResQRoute-Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.4.
+**SIH26002 | Ministry of Development of North Eastern Region (MDoNER)**  
+*Resilient Logistics & Route Intelligence Platform*
 
-## Development server
+## Overview
+Angular Progressive Web Application (PWA) featuring dual-form sliding authentication, native-feeling mobile touch controls, role-based dashboards (Customer, Driver, Admin), and Vercel deployment readiness.
 
-To start a local development server, run:
+## Features
+- **Sliding Authentication UI:** Smooth dual-panel transition with curved gradient overlay.
+- **Mobile Touch Native UX:** Segmented controller and touch-optimized input layout for invigilator/judge evaluation on mobile devices.
+- **Role-Based Access Control (RBAC):** Customer Requisition Portal, Driver Field PWA, and Admin Control Center.
+- **PWA Ready:** Installable web application (`manifest.webmanifest`) for offline corridor operation.
+- **Fast Demo Logins:** 1-tap evaluator logins for `driver1` (`TR-102`), `customer1`, and `admin`.
 
-```bash
-ng serve
-```
+## Technology Stack
+- **Framework:** Angular 19+ (Standalone API)
+- **Styling:** Vanilla CSS with custom micro-animations & responsive breakpoints
+- **State & Auth:** Signals, Reactive Forms, Functional JWT Interceptor, Role Route Guards
+- **Deployment:** Vercel SPA routing (`vercel.json`)
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Quick Start (Local Development)
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Start development server:
+   ```bash
+   npm start
+   ```
+3. Open `http://localhost:4200` in your browser.

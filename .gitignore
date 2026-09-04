@@ -47,3 +47,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Documentation (ignore internal confidential docs, allow only README)
+*.md
+!README.md
