@@ -2,7 +2,7 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, throwError, of } from 'rxjs';
-import { User, AuthResponse, HealthResponse, UserRole } from '../models/user.model';
+import { User, AuthResponse, HealthResponse, UserRole, AuthorityRequestItem, RerouteReportsData } from '../models/user.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -50,7 +50,12 @@ export class AuthService {
 
   public register(payload: any): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/api/auth/register/`, payload).pipe(
-      tap(res => this.handleAuthSuccess(res))
+      tap(res => {
+        // Only store tokens and redirect automatically if not PENDING authority
+        if (res.user?.role !== 'ADMIN' || res.access) {
+          this.handleAuthSuccess(res);
+        }
+      })
     );
   }
 
@@ -58,6 +63,18 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/api/auth/login/`, credentials).pipe(
       tap(res => this.handleAuthSuccess(res))
     );
+  }
+
+  public getAuthorityRequests(): Observable<AuthorityRequestItem[]> {
+    return this.http.get<AuthorityRequestItem[]>(`${this.apiUrl}/api/auth/authority-requests/`);
+  }
+
+  public actOnAuthorityRequest(id: number, action: 'approve' | 'reject'): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/auth/authority-requests/${id}/action/`, { action });
+  }
+
+  public getRerouteReports(): Observable<RerouteReportsData> {
+    return this.http.get<RerouteReportsData>(`${this.apiUrl}/api/auth/reroute-reports/`);
   }
 
   public fetchMe(): Observable<User> {
@@ -71,7 +88,7 @@ export class AuthService {
 
   public logout(): void {
     this.clearSession();
-    this.router.navigate(['/login']);
+    this.router.navigate(['/auth/login']);
   }
 
   private clearSession(): void {
@@ -82,10 +99,16 @@ export class AuthService {
   }
 
   private handleAuthSuccess(res: AuthResponse): void {
-    localStorage.setItem('resqroute_access_token', res.access);
-    localStorage.setItem('resqroute_refresh_token', res.refresh);
-    localStorage.setItem('resqroute_user', JSON.stringify(res.user));
-    this.currentUserSignal.set(res.user);
+    if (res.access) {
+      localStorage.setItem('resqroute_access_token', res.access);
+    }
+    if (res.refresh) {
+      localStorage.setItem('resqroute_refresh_token', res.refresh);
+    }
+    if (res.user) {
+      localStorage.setItem('resqroute_user', JSON.stringify(res.user));
+      this.currentUserSignal.set(res.user);
+    }
   }
 
   public navigateForRole(role: UserRole): void {

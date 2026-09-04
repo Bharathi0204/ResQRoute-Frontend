@@ -59,7 +59,7 @@
           <input 
             type="text" 
             formControlName="username" 
-            placeholder="Username or Email" 
+            placeholder="Username or Official Email" 
             autocomplete="username"
             autocapitalize="none"
             required>
@@ -84,7 +84,7 @@
         </div>
 
         <div class="forgot-link">
-          <a href="javascript:void(0)" (click)="errorMessage.set('Contact administrator to reset credentials.')">Forgot Password?</a>
+          <a href="javascript:void(0)" (click)="errorMessage.set('Contact system administrator to reset credentials.')">Forgot Password?</a>
         </div>
 
         <button type="submit" class="btn" [disabled]="isLoading()">
@@ -111,14 +111,14 @@
         <h1>Create Account</h1>
         <p class="subtitle">Select your role to access corridor dispatch</p>
         
-        <!-- Role Selector Switch -->
-        <div class="role-selector">
+        <!-- 3-ROLE SELECTOR SWITCH -->
+        <div class="role-selector triple">
           <button 
             type="button" 
             class="role-pill" 
             [class.active]="selectedRole() === 'CUSTOMER'"
             (click)="setRole('CUSTOMER')">
-            <i class='bx bxs-user'></i> Customer / Requester
+            <i class='bx bxs-user-pin'></i> Customer
           </button>
           <button 
             type="button" 
@@ -126,6 +126,13 @@
             [class.active]="selectedRole() === 'DRIVER'"
             (click)="setRole('DRIVER')">
             <i class='bx bxs-truck'></i> Field Driver
+          </button>
+          <button 
+            type="button" 
+            class="role-pill" 
+            [class.active]="selectedRole() === 'ADMIN'"
+            (click)="setRole('ADMIN')">
+            <i class='bx bxs-institution'></i> Govt Authority
           </button>
         </div>
 
@@ -142,6 +149,7 @@
         }
 
         <div class="form-scrollable">
+          <!-- COMMON PERSONAL INFO -->
           <div class="input-grid">
             <div class="input-box">
               <input type="text" formControlName="fullName" placeholder="Full Name" required>
@@ -156,57 +164,176 @@
 
           <div class="input-grid">
             <div class="input-box">
-              <input type="email" formControlName="email" placeholder="Email Address" autocapitalize="none" required>
+              <input 
+                type="email" 
+                formControlName="email" 
+                [placeholder]="selectedRole() === 'DRIVER' ? 'Email Address (Optional)' : 'Email Address'" 
+                autocapitalize="none">
               <i class='bx bxs-envelope'></i>
             </div>
 
             <div class="input-box">
-              <input type="tel" formControlName="phone" placeholder="Phone Number" required>
+              <input type="tel" formControlName="phone" placeholder="Phone Number (e.g. 9876543210)" required>
               <i class='bx bxs-phone'></i>
             </div>
           </div>
 
-          <div class="input-box select-box">
-            <select formControlName="organization" required>
-              <option value="" disabled selected>Select Organization / Agency</option>
-              @for (org of organizations; track org) {
-                <option [value]="org">{{ org }}</option>
-              }
-            </select>
-            <i class='bx bx-chevron-down select-arrow'></i>
-          </div>
-
-          <!-- DRIVER-SPECIFIC FIELDS -->
-          @if (selectedRole() === 'DRIVER') {
-            <div class="driver-fields-banner">
-              <i class='bx bxs-truck'></i> Driver & Vehicle Specification
+          <!-- ==================== ROLE 1: CUSTOMER SPECIFIC ==================== -->
+          @if (selectedRole() === 'CUSTOMER') {
+            <div class="role-banner customer">
+              <i class='bx bxs-map-pin'></i> Delivery & Regional Locality Details
             </div>
-            <div class="input-grid role-specific-grid">
-              <div class="input-box">
-                <input type="text" formControlName="vehicleNumber" placeholder="Assigned Vehicle (e.g. TR-102)" required>
-                <i class='bx bxs-car'></i>
+
+            <div class="input-grid">
+              <div class="input-box select-box">
+                <select formControlName="areaType">
+                  <option value="CITY">City / Urban Locality</option>
+                  <option value="VILLAGE">Village / Rural Settlement</option>
+                </select>
+                <i class='bx bx-chevron-down select-arrow'></i>
               </div>
 
               <div class="input-box">
-                <input type="text" formControlName="licenseNumber" placeholder="Driver License ID (e.g. DRV-001)" required>
-                <i class='bx bxs-badge-check'></i>
+                <input type="text" formControlName="localityName" placeholder="City or Village Name" required>
+                <i class='bx bxs-landmark'></i>
+              </div>
+            </div>
+
+            <div class="input-grid">
+              <div class="input-box">
+                <input type="text" formControlName="pincode" placeholder="Postal Pincode (e.g. 781001)" maxlength="6" required>
+                <i class='bx bxs-compass'></i>
+              </div>
+
+              <div class="input-box select-box">
+                <select formControlName="state" required>
+                  <option value="" disabled selected>Select NE State</option>
+                  @for (st of neStates; track st) {
+                    <option [value]="st">{{ st }}</option>
+                  }
+                </select>
+                <i class='bx bx-chevron-down select-arrow'></i>
               </div>
             </div>
           }
 
-          <!-- CUSTOMER-SPECIFIC FIELDS -->
-          @if (selectedRole() === 'CUSTOMER') {
-            <div class="input-box select-box role-specific-box">
-              <select formControlName="department">
-                <option value="" disabled selected>Select Department / Logistics Operations</option>
-                @for (dept of departments; track dept) {
-                  <option [value]="dept">{{ dept }}</option>
+          <!-- ==================== ROLE 2: FIELD DRIVER SPECIFIC ==================== -->
+          @if (selectedRole() === 'DRIVER') {
+            <div class="role-banner driver">
+              <i class='bx bxs-truck'></i> Driver & Vehicle Specification
+            </div>
+
+            <!-- Interactive Vehicle Specification Grid -->
+            <div class="vehicle-selector-label">Select Primary Vehicle Type:</div>
+            <div class="vehicle-specs-grid">
+              @for (v of vehicleTypes; track v.id) {
+                <div 
+                  class="vehicle-spec-card" 
+                  [class.active]="selectedVehicleType() === v.id"
+                  (click)="selectVehicleType(v.id)">
+                  <i class='bx {{ v.icon }}'></i>
+                  <span class="v-title">{{ v.name }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="input-box">
+              <input type="text" formControlName="vehicleNumber" placeholder="Assigned Vehicle Number (e.g. TR-102 / AS-01-EC-9421)" required>
+              <i class='bx bxs-car'></i>
+            </div>
+
+            <!-- Driving License Input with "View Example" Visual Button -->
+            <div class="input-with-button">
+              <div class="input-box flex-grow">
+                <input 
+                  type="text" 
+                  formControlName="licenseNumber" 
+                  placeholder="Driving License Number (e.g. TN01 20190001234)" 
+                  required>
+                <i class='bx bxs-badge-check'></i>
+              </div>
+              <button 
+                type="button" 
+                class="view-example-btn" 
+                (click)="toggleLicenseExampleModal()" 
+                title="View Indian Driving License specimen">
+                <i class='bx bx-show-alt'></i> View Example
+              </button>
+            </div>
+
+            <div class="input-box select-box">
+              <select formControlName="licenseIssuingState">
+                <option value="" disabled selected>License Issuing State</option>
+                @for (st of neStates; track st) {
+                  <option [value]="st">{{ st }}</option>
                 }
+                <option value="Other State">Other Indian State</option>
               </select>
               <i class='bx bx-chevron-down select-arrow'></i>
             </div>
           }
 
+          <!-- ==================== ROLE 3: GOVERNMENT OFFICIAL / ADMIN ==================== -->
+          @if (selectedRole() === 'ADMIN') {
+            <div class="role-banner admin">
+              <i class='bx bxs-institution'></i> Government Authority & Nodal Officer Details
+            </div>
+
+            <div class="input-grid">
+              <div class="input-box">
+                <input 
+                  type="text" 
+                  formControlName="officialId" 
+                  placeholder="Official ID / Badge Code (e.g. MDoNER-AS-01)" 
+                  required>
+                <i class='bx bxs-id-card'></i>
+              </div>
+
+              <div class="input-box">
+                <input 
+                  type="text" 
+                  formControlName="designation" 
+                  placeholder="Designation (e.g. Nodal Officer / DC)" 
+                  required>
+                <i class='bx bxs-briefcase'></i>
+              </div>
+            </div>
+
+            <div class="input-box select-box">
+              <select formControlName="departmentName" required>
+                <option value="" disabled selected>Select Department / Ministry</option>
+                @for (dept of authorityDepartments; track dept) {
+                  <option [value]="dept">{{ dept }}</option>
+                }
+              </select>
+              <i class='bx bx-chevron-down select-arrow'></i>
+            </div>
+
+            <div class="input-grid">
+              <div class="input-box select-box">
+                <select formControlName="jurisdictionState" required>
+                  <option value="" disabled selected>Jurisdiction State</option>
+                  @for (st of neStates; track st) {
+                    <option [value]="st">{{ st }}</option>
+                  }
+                  <option value="Central Northeast HQ">Central Northeast HQ</option>
+                </select>
+                <i class='bx bx-chevron-down select-arrow'></i>
+              </div>
+
+              <div class="input-box">
+                <input type="text" formControlName="officeAddress" placeholder="District Office / Headquarters Address">
+                <i class='bx bxs-building-house'></i>
+              </div>
+            </div>
+
+            <div class="authority-approval-note">
+              <i class='bx bxs-info-circle'></i>
+              <span><strong>Superadmin Verification Required:</strong> Your official government profile will be reviewed and authorized by Central Superadmin before corridor reporting access is unlocked.</span>
+            </div>
+          }
+
+          <!-- PASSWORD INPUTS -->
           <div class="input-grid">
             <div class="input-box password-box">
               <input 
@@ -245,9 +372,17 @@
 
         <button type="submit" class="btn" [disabled]="isLoading()">
           @if (isLoading()) {
-            <span class="spinner"></span> Registering...
+            <span class="spinner"></span> Processing...
           } @else {
-            <span>Register as {{ selectedRole() }}</span>
+            <span>
+              @if (selectedRole() === 'CUSTOMER') {
+                Register as Customer
+              } @else if (selectedRole() === 'DRIVER') {
+                Register as Field Driver
+              } @else {
+                Submit Authority Registration
+              }
+            </span>
           }
         </button>
 
@@ -274,16 +409,107 @@
 
       <div class="toggle-panel toggle-right">
         <div class="panel-icon">
-          <i class='bx bxs-truck'></i>
+          <i class='bx bxs-shield-plus'></i>
         </div>
-        <h1>Welcome Back!</h1>
-        <p class="tagline">Guwahati → Silchar Demonstration Corridor</p>
-        <p class="subtag">Access real-time risk assessment & fleet dispatches.</p>
+        <h1>WELCOME BACK</h1>
+        <p class="tagline">Mission-Critical Northeast Logistics</p>
+        <p class="subtag">Guwahati • Shillong • Silchar • Agartala • Gangtok</p>
         <div class="divider-line"></div>
-        <p>Already have an active credential?</p>
-        <button type="button" class="btn login-btn" (click)="togglePanel(false)">Login</button>
+        <p>Already have an operational dispatch account?</p>
+        <button type="button" class="btn login-btn" (click)="togglePanel(false)">Sign In</button>
       </div>
     </div>
 
   </div>
+
+  <!-- ==================== DRIVING LICENSE SPECIMEN MODAL ==================== -->
+  @if (showLicenseExampleModal()) {
+    <div class="modal-backdrop" (click)="toggleLicenseExampleModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class='bx bxs-id-card'></i>
+            <div>
+              <h3>Driving License Example</h3>
+              <p>Here is an example of an Indian Driving License. Check the highlighted number to know what to enter.</p>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="toggleLicenseExampleModal()">
+            <i class='bx bx-x'></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Specimen Graphic Replicating Indian Driving License -->
+          <div class="dl-specimen-card">
+            <div class="dl-header">
+              <div class="emblem-text">
+                <span class="country">UNION OF INDIA</span>
+                <span class="dl-title">DRIVING LICENCE</span>
+              </div>
+              <span class="state-code">TN</span>
+            </div>
+
+            <div class="dl-content">
+              <div class="dl-avatar">
+                <i class='bx bxs-user'></i>
+                <span class="sign">Holder's Sign</span>
+              </div>
+
+              <div class="dl-details">
+                <!-- Highlighted DL Number with Pointer Arrow -->
+                <div class="dl-highlight-row">
+                  <span class="label">DL No.</span>
+                  <div class="highlight-box">
+                    <span class="number">TN01 20190001234</span>
+                    <div class="callout-arrow">
+                      <i class='bx bxs-up-arrow-alt'></i> Enter this number
+                    </div>
+                  </div>
+                </div>
+
+                <div class="dl-row">
+                  <span class="label">Name</span>
+                  <span class="val">RAHUL KUMAR</span>
+                </div>
+                <div class="dl-row">
+                  <span class="label">S/D/W of</span>
+                  <span class="val">SURESH KUMAR</span>
+                </div>
+                <div class="dl-row">
+                  <span class="label">Valid Till</span>
+                  <span class="val">14-08-2035</span>
+                </div>
+                <div class="dl-row">
+                  <span class="label">Authorisation</span>
+                  <span class="val bold">LMV / TRANS / HGMV</span>
+                </div>
+              </div>
+
+              <div class="dl-qr">
+                <i class='bx bx-qr'></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Helpful Instructions -->
+          <div class="dl-tips-card">
+            <h4><i class='bx bxs-bulb'></i> Helpful Tips:</h4>
+            <ul>
+              <li>Enter the Driving License Number exactly as printed on your card (spaces are optional).</li>
+              <li>Valid North Eastern examples: <strong>AS01 20210009876</strong>, <strong>SK02 20180004521</strong>, <strong>ML05 20200003112</strong>.</li>
+              <li>Make sure your license is active and authorized for commercial/transport cargo.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn close-specimen-btn" (click)="toggleLicenseExampleModal()">
+            <span>Got It, Back to Registration</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
 </div>
