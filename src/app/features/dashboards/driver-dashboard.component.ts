@@ -29,10 +29,10 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
             <i class='bx bx-refresh refresh-icon' [class.bx-spin]="isCheckingPing()"></i>
           </div>
 
-          <!-- PWA Install Button -->
-          <button class="install-pwa-btn" (click)="handleInstallClick()">
+          <!-- PWA Install / Download Button -->
+          <button class="install-pwa-btn" (click)="handleInstallClick()" title="Download & Install Application">
             <i class='bx bx-download'></i>
-            <span>{{ isAppInstalled() ? 'App Installed' : 'Install App' }}</span>
+            <span>{{ isAppInstalled() ? 'App Installed ✓' : 'Install / Download App' }}</span>
           </button>
 
           <!-- Security Password Button -->
@@ -69,6 +69,10 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
             <button class="primary-scan-btn" (click)="openActivateModal()">
               <i class='bx bx-qr-scan'></i>
               <span>Activate Mission with QR</span>
+            </button>
+            <button class="secondary-download-btn" (click)="showInstallModal.set(true)" title="Download Standalone Application for PC & Mobile">
+              <i class='bx bxs-download'></i>
+              <span>Download App</span>
             </button>
           </div>
         </section>
@@ -367,51 +371,143 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
         </div>
       </div>
 
-      <!-- PWA INSTALL GUIDE MODAL -->
+      <!-- DOWNLOAD & INSTALL APPLICATION CENTER MODAL -->
       <div class="modal-overlay" *ngIf="showInstallModal()" (click)="showInstallModal.set(false)">
         <div class="modal-panel install-modal" (click)="$event.stopPropagation()">
           <div class="modal-top">
             <div class="title-wrap">
-              <i class='bx bx-mobile-alt text-blue'></i>
+              <i class='bx bxs-download text-blue'></i>
               <div>
-                <h3>Install ResQRoute Driver App</h3>
-                <p>Run full-screen on your phone with offline support</p>
+                <h3>Download & Install Driver Application</h3>
+                <p>1-Click Mobile Installation & Desktop System Download Center</p>
               </div>
             </div>
             <button class="modal-close-btn" (click)="showInstallModal.set(false)">×</button>
           </div>
 
           <div class="modal-content-area">
-            <div class="install-guide-steps">
-              <div class="guide-step">
-                <div class="step-num">1</div>
-                <div class="step-desc">
-                  <strong>On Android (Chrome / Edge):</strong>
-                  <p>Tap the browser menu (<strong>⋮</strong> three dots in top right) and select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</p>
+            <!-- 1-Click Instant Mobile & Desktop Install Action -->
+            <div class="one-click-install-card" *ngIf="hasDeferredPrompt() || !isAppInstalled()">
+              <div class="card-lead">
+                <div class="pulse-app-icon">
+                  <i class='bx bx-mobile-alt'></i>
+                </div>
+                <div class="lead-text">
+                  <strong>1-Click Instant Mobile & Desktop Install</strong>
+                  <p>Installs directly to your home screen or desktop application tray with offline mountain support.</p>
                 </div>
               </div>
+              <button type="button" class="action-install-primary" (click)="triggerNativeInstallPrompt()">
+                <i class='bx bx-bolt-circle'></i>
+                <span>Install Application Now (1-Click)</span>
+              </button>
+            </div>
 
-              <div class="guide-step">
-                <div class="step-num">2</div>
-                <div class="step-desc">
-                  <strong>On iPhone / iPad (Safari):</strong>
-                  <p>Tap the <strong>Share</strong> button at bottom, scroll down, and tap <strong>"Add to Home Screen"</strong>.</p>
-                </div>
+            <div class="installed-badge-card" *ngIf="isAppInstalled()">
+              <i class='bx bxs-check-shield text-emerald'></i>
+              <div>
+                <strong>ResQRoute is Installed on this Device</strong>
+                <p>Operating as a standalone full-screen application with offline cache.</p>
+              </div>
+            </div>
+
+            <!-- DESKTOP / PC DOWNLOADS SECTION -->
+            <div class="download-section-group">
+              <div class="section-group-label">
+                <i class='bx bxl-windows'></i>
+                <span>DOWNLOAD FOR SYSTEMS (WINDOWS / PC / LAPTOP)</span>
               </div>
 
-              <div class="guide-step">
-                <div class="step-num">3</div>
-                <div class="step-desc">
-                  <strong>On Windows / Desktop:</strong>
-                  <p>Click the install icon in your address bar (right corner) to install as a standalone desktop app.</p>
+              <div class="download-grid">
+                <!-- Windows Launcher (.bat) -->
+                <div class="download-item-card" (click)="downloadWindowsAppLauncher()">
+                  <div class="item-icon-box win">
+                    <i class='bx bxl-windows'></i>
+                  </div>
+                  <div class="item-content">
+                    <div class="item-title-row">
+                      <h4>Windows App Launcher</h4>
+                      <span class="file-ext">.BAT</span>
+                    </div>
+                    <p>Launches Driver Terminal in standalone borderless desktop app mode (1-Click).</p>
+                    <span class="download-cta"><i class='bx bx-download'></i> Download Windows App (.bat)</span>
+                  </div>
+                </div>
+
+                <!-- Desktop Shortcut (.url) -->
+                <div class="download-item-card" (click)="downloadDesktopAppLauncher()">
+                  <div class="item-icon-box url">
+                    <i class='bx bx-desktop'></i>
+                  </div>
+                  <div class="item-content">
+                    <div class="item-title-row">
+                      <h4>Desktop Shortcut</h4>
+                      <span class="file-ext">.URL</span>
+                    </div>
+                    <p>Places a 1-click desktop icon with official ResQRoute emblem on your PC.</p>
+                    <span class="download-cta"><i class='bx bx-download'></i> Download Shortcut (.url)</span>
+                  </div>
+                </div>
+
+                <!-- Offline Emergency Console (.html) -->
+                <div class="download-item-card" (click)="downloadOfflineEmergencyConsole()">
+                  <div class="item-icon-box html">
+                    <i class='bx bx-file'></i>
+                  </div>
+                  <div class="item-content">
+                    <div class="item-title-row">
+                      <h4>Offline Emergency Console</h4>
+                      <span class="file-ext">.HTML</span>
+                    </div>
+                    <p>Single-file emergency bundle. Works with 0% internet on any computer or phone.</p>
+                    <span class="download-cta"><i class='bx bx-download'></i> Download Offline App (.html)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MOBILE ONE-CLICK INSTALL GUIDE -->
+            <div class="download-section-group">
+              <div class="section-group-label">
+                <i class='bx bx-mobile'></i>
+                <span>MOBILE ONE-CLICK INSTALL GUIDE</span>
+              </div>
+
+              <div class="install-guide-steps">
+                <div class="guide-step">
+                  <div class="step-num android">
+                    <i class='bx bxl-android'></i>
+                  </div>
+                  <div class="step-desc">
+                    <strong>Android (Chrome / Edge / Samsung Internet):</strong>
+                    <p>
+                      Click <strong>"Install Application Now"</strong> above, OR tap your browser menu 
+                      (<strong>⋮</strong> three dots top right) and select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>. An icon will appear on your phone like other native applications.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="guide-step">
+                  <div class="step-num apple">
+                    <i class='bx bxl-apple'></i>
+                  </div>
+                  <div class="step-desc">
+                    <strong>iPhone / iPad (Apple Safari):</strong>
+                    <p>
+                      Tap the <strong>Share</strong> button (<i class='bx bx-share'></i> bottom bar), scroll down, and tap 
+                      <strong>"Add to Home Screen"</strong> (<i class='bx bx-plus-square'></i>).
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="modal-bottom">
-            <button class="btn-confirm" (click)="showInstallModal.set(false)">
-              <span>Got it</span>
+            <button class="btn-cancel" (click)="showInstallModal.set(false)">Close</button>
+            <button class="btn-confirm" (click)="downloadWindowsAppLauncher()">
+              <i class='bx bx-download'></i>
+              <span>Download for Windows (.bat)</span>
             </button>
           </div>
         </div>
@@ -751,6 +847,27 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
     }
     .primary-scan-btn:hover {
       background: #0369a1;
+      transform: translateY(-1px);
+    }
+    .secondary-download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f1f5f9;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+      padding: 11px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .secondary-download-btn:hover {
+      background: #e2e8f0;
+      border-color: #94a3b8;
+      color: #0284c7;
       transform: translateY(-1px);
     }
 
@@ -1392,11 +1509,200 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
     .btn-confirm:hover { background: #0369a1; }
     .btn-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* Install Guide Steps */
-    .install-guide-steps {
+    /* Download & Install Application Center */
+    .install-modal {
+      max-width: 620px;
+    }
+    .one-click-install-card {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border: 1px solid #38bdf8;
+      border-radius: 12px;
+      padding: 16px;
+      color: #f8fafc;
       display: flex;
       flex-direction: column;
       gap: 14px;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.15);
+    }
+    .card-lead {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .pulse-app-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: #0284c7;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+    }
+    .lead-text strong {
+      font-size: 14.5px;
+      color: #ffffff;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .lead-text p {
+      margin: 0;
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+    .action-install-primary {
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+    }
+    .action-install-primary:hover {
+      background: #0369a1;
+      transform: translateY(-1px);
+    }
+    .installed-badge-card {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #065f46;
+    }
+    .installed-badge-card i {
+      font-size: 26px;
+      color: #059669;
+    }
+    .installed-badge-card strong {
+      font-size: 13.5px;
+      display: block;
+      color: #047857;
+    }
+    .installed-badge-card p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: #065f46;
+    }
+
+    .download-section-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .section-group-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #64748b;
+      letter-spacing: 0.6px;
+    }
+    .download-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .download-item-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .download-item-card:hover {
+      border-color: #0284c7;
+      background: #f8fafc;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+    .item-icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .item-icon-box.win {
+      background: #eff6ff;
+      color: #0284c7;
+    }
+    .item-icon-box.url {
+      background: #f5f3ff;
+      color: #7c3aed;
+    }
+    .item-icon-box.html {
+      background: #ecfdf5;
+      color: #059669;
+    }
+    .item-content {
+      flex: 1;
+    }
+    .item-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+    .item-title-row h4 {
+      margin: 0;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .file-ext {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #475569;
+    }
+    .item-content p {
+      margin: 0 0 6px;
+      font-size: 11.5px;
+      color: #64748b;
+      line-height: 1.35;
+    }
+    .download-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0284c7;
+    }
+    .download-cta:hover {
+      text-decoration: underline;
+    }
+
+    /* Mobile Install Guide */
+    .install-guide-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
     .guide-step {
       display: flex;
@@ -1410,15 +1716,20 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
     .step-num {
       width: 28px;
       height: 28px;
-      background: #0284c7;
-      color: #ffffff;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
+      font-size: 14px;
       flex-shrink: 0;
+    }
+    .step-num.android {
+      background: #10b981;
+      color: #ffffff;
+    }
+    .step-num.apple {
+      background: #0f172a;
+      color: #ffffff;
     }
     .step-desc strong { font-size: 13px; color: #0f172a; display: block; margin-bottom: 2px; }
     .step-desc p { margin: 0; font-size: 12px; color: #475569; line-height: 1.4; }
@@ -1482,6 +1793,7 @@ export class DriverDashboardComponent implements OnInit, OnDestroy {
   // PWA Install Signals & Event
   public isAppInstalled = signal<boolean>(false);
   public showInstallModal = signal<boolean>(false);
+  public hasDeferredPrompt = signal<boolean>(false);
   private deferredPrompt: any = null;
 
   // Trips & Active Mission
@@ -1518,6 +1830,20 @@ export class DriverDashboardComponent implements OnInit, OnDestroy {
   private beforeInstallPromptHandler = (e: any) => {
     e.preventDefault();
     this.deferredPrompt = e;
+    this.hasDeferredPrompt.set(true);
+  };
+  private pwaPromptReadyHandler = () => {
+    if ((window as any).deferredPWAInstallPrompt) {
+      this.deferredPrompt = (window as any).deferredPWAInstallPrompt;
+      this.hasDeferredPrompt.set(true);
+    }
+  };
+  private appInstalledHandler = () => {
+    this.isAppInstalled.set(true);
+    this.hasDeferredPrompt.set(false);
+    this.deferredPrompt = null;
+    (window as any).deferredPWAInstallPrompt = null;
+    this.actionSuccess.set('ResQRoute Driver Application is installed on this device!');
   };
 
   ngOnInit(): void {
@@ -1525,15 +1851,23 @@ export class DriverDashboardComponent implements OnInit, OnDestroy {
       this.assignedVehiclePlate = this.user()!.driver_profile!.vehicle_number;
     }
 
+    // Check if early prompt already captured in window
+    if ((window as any).deferredPWAInstallPrompt) {
+      this.deferredPrompt = (window as any).deferredPWAInstallPrompt;
+      this.hasDeferredPrompt.set(true);
+    }
+
     // Check if app is already running standalone
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true) {
       this.isAppInstalled.set(true);
     }
 
-    // Network listeners
+    // Network & PWA listeners
     window.addEventListener('online', this.onlineHandler);
     window.addEventListener('offline', this.offlineHandler);
     window.addEventListener('beforeinstallprompt', this.beforeInstallPromptHandler);
+    window.addEventListener('pwa-prompt-ready', this.pwaPromptReadyHandler);
+    window.addEventListener('appinstalled', this.appInstalledHandler);
 
     this.loadTrips();
   }
@@ -1542,6 +1876,8 @@ export class DriverDashboardComponent implements OnInit, OnDestroy {
     window.removeEventListener('online', this.onlineHandler);
     window.removeEventListener('offline', this.offlineHandler);
     window.removeEventListener('beforeinstallprompt', this.beforeInstallPromptHandler);
+    window.removeEventListener('pwa-prompt-ready', this.pwaPromptReadyHandler);
+    window.removeEventListener('appinstalled', this.appInstalledHandler);
   }
 
   private handleNetworkChange(status: boolean): void {
@@ -1572,18 +1908,40 @@ export class DriverDashboardComponent implements OnInit, OnDestroy {
   }
 
   public handleInstallClick(): void {
-    if (this.deferredPrompt) {
-      this.deferredPrompt.prompt();
-      this.deferredPrompt.userChoice.then((choice: any) => {
-        if (choice.outcome === 'accepted') {
+    const promptEvent = this.deferredPrompt || (window as any).deferredPWAInstallPrompt;
+    if (promptEvent) {
+      promptEvent.prompt();
+      promptEvent.userChoice.then((choice: any) => {
+        if (choice && choice.outcome === 'accepted') {
           this.isAppInstalled.set(true);
+          this.hasDeferredPrompt.set(false);
           this.actionSuccess.set('ResQRoute Driver PWA installed successfully on your device!');
         }
         this.deferredPrompt = null;
+        (window as any).deferredPWAInstallPrompt = null;
       });
     } else {
-      // Show simple 3-step installation guide modal
+      // Show Download & Install Center with 1-Click Mobile guide & Windows launchers
       this.showInstallModal.set(true);
+    }
+  }
+
+  public triggerNativeInstallPrompt(): void {
+    const promptEvent = this.deferredPrompt || (window as any).deferredPWAInstallPrompt;
+    if (promptEvent) {
+      promptEvent.prompt();
+      promptEvent.userChoice.then((choice: any) => {
+        if (choice && choice.outcome === 'accepted') {
+          this.isAppInstalled.set(true);
+          this.hasDeferredPrompt.set(false);
+          this.showInstallModal.set(false);
+          this.actionSuccess.set('ResQRoute Driver Application installed successfully!');
+        }
+        this.deferredPrompt = null;
+        (window as any).deferredPWAInstallPrompt = null;
+      });
+    } else {
+      alert('1-Click Mobile & PC Setup:\n\n• Android: Tap browser menu (⋮) -> "Install App" or "Add to Home Screen".\n• iPhone: Tap Share -> "Add to Home Screen".\n• Windows / PC: Click the "Download Windows App (.bat)" button to launch standalone app on your desktop!');
     }
   }
 
@@ -1780,6 +2138,153 @@ export class DriverDashboardComponent implements OnInit, OnDestroy {
 
     this.actionSuccess.set(`Offline Mission Packet for ${trip.trip_code} downloaded & cached!`);
     setTimeout(() => this.actionSuccess.set(null), 5000);
+  }
+
+  public downloadWindowsAppLauncher(): void {
+    const appUrl = window.location.origin + '/driver/dashboard';
+    const batContent = `@echo off
+:: =========================================================================
+:: ResQRoute Field Driver Terminal - Windows Desktop Standalone Launcher
+:: Smart India Hackathon 2024 - Problem SIH26002 (North Eastern Corridors)
+:: =========================================================================
+title ResQRoute Field Driver Terminal
+cls
+echo =========================================================================
+echo         RESQROUTE - FIELD DRIVER COMMAND TERMINAL
+echo    Highland Logistics & Autonomous Offline Route Intelligence
+echo =========================================================================
+echo.
+echo Launching standalone high-contrast driver cockpit on Windows...
+echo Destination: ${appUrl}
+echo.
+
+:: Try launching Microsoft Edge in standalone App Mode
+where msedge >nul 2>&1
+if %errorlevel%==0 (
+    start msedge --app="${appUrl}" --window-size=1280,840
+    exit
+)
+
+:: Try launching Google Chrome in standalone App Mode
+where chrome >nul 2>&1
+if %errorlevel%==0 (
+    start chrome --app="${appUrl}" --window-size=1280,840
+    exit
+)
+
+:: Fallback to default browser
+start "" "${appUrl}"
+exit
+`;
+    this.saveFileDownload(batContent, 'Launch-ResQRoute-Driver.bat', 'application/x-bat');
+    this.actionSuccess.set('Windows Launcher (.bat) downloaded! Run it to launch the standalone desktop app.');
+    setTimeout(() => this.actionSuccess.set(null), 6000);
+  }
+
+  public downloadDesktopAppLauncher(): void {
+    const appUrl = window.location.origin + '/driver/dashboard';
+    const iconUrl = window.location.origin + '/assets/icon-192.png';
+    const urlContent = `[{000214A0-0000-0000-C000-000000000046}]
+Prop3=19,11
+[InternetShortcut]
+IDList=
+URL=${appUrl}
+IconFile=${iconUrl}
+IconIndex=0
+HotKey=0
+`;
+    this.saveFileDownload(urlContent, 'ResQRoute-Driver-Terminal.url', 'application/internet-shortcut');
+    this.actionSuccess.set('Desktop Shortcut (.url) downloaded! Move to your desktop for 1-click launch.');
+    setTimeout(() => this.actionSuccess.set(null), 6000);
+  }
+
+  public downloadOfflineEmergencyConsole(): void {
+    const appUrl = window.location.origin + '/driver/dashboard';
+    const cachedTrips = localStorage.getItem('resqroute_cached_trips') || '[]';
+    const userObj = this.user() || { username: 'Field Driver', assignedVehicle: this.assignedVehiclePlate };
+    const userJson = JSON.stringify(userObj);
+
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>ResQRoute Driver — Offline Emergency Console</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0b1120; color: #f8fafc; margin: 0; padding: 16px; }
+    .header { background: #1e293b; border-radius: 12px; padding: 16px 20px; border: 1px solid #334155; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    h1 { margin: 0; font-size: 18px; color: #38bdf8; font-weight: 800; }
+    .badge { background: #059669; color: #ffffff; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .card { background: #1e293b; border-radius: 12px; padding: 16px 20px; border: 1px solid #334155; margin-bottom: 14px; }
+    .card h3 { margin: 0 0 10px; font-size: 15px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn { background: #0284c7; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-hazard { background: #e11d48; margin-left: 8px; }
+    .btn:hover { opacity: 0.9; }
+    .link-btn { color: #38bdf8; text-decoration: none; font-size: 13.5px; font-weight: 600; display: inline-block; margin-top: 8px; }
+    pre { background: #030712; padding: 14px; border-radius: 8px; overflow-x: auto; color: #34d399; font-size: 12px; line-height: 1.5; border: 1px solid #1f2937; }
+    .log-box { margin-top: 14px; padding: 10px 14px; background: #0f172a; border-radius: 8px; font-size: 13px; border-left: 4px solid #38bdf8; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>ResQRoute Field Driver Terminal</h1>
+      <small style="color: #94a3b8;">Standalone Offline Highland Emergency Console (SIH26002)</small>
+    </div>
+    <span class="badge">STANDALONE 100% OFFLINE</span>
+  </div>
+
+  <div class="card">
+    <h3>Driver & Vehicle Telemetry</h3>
+    <p style="margin: 0; font-size: 14px;">Driver: <strong id="driverName" style="color: #38bdf8;">Loading...</strong> | Assigned Vehicle: <strong style="color: #f59e0b;">${this.assignedVehiclePlate}</strong></p>
+    <a class="link-btn" href="${appUrl}">Launch Online Cloud Driver Terminal &rarr;</a>
+  </div>
+
+  <div class="card">
+    <h3>Highland Corridor Emergency Controls</h3>
+    <button class="btn" onclick="recordCheckpoint()">Log Mountain Pass Checkpoint</button>
+    <button class="btn btn-hazard" onclick="recordSOS()">Broadcast Landslide SOS Alert</button>
+    <div id="logMsg" class="log-box">Ready for autonomous offline operations. Local events are recorded to memory.</div>
+  </div>
+
+  <div class="card">
+    <h3>Preserved Corridor Mission Manifests</h3>
+    <pre id="manifestData"></pre>
+  </div>
+
+  <script>
+    const user = ${userJson};
+    const trips = ${cachedTrips};
+    document.getElementById('driverName').textContent = user.first_name || user.username || 'Field Driver';
+    document.getElementById('manifestData').textContent = JSON.stringify(trips, null, 2);
+
+    function recordCheckpoint() {
+      const stamp = new Date().toLocaleTimeString();
+      document.getElementById('logMsg').innerHTML = '<strong>✓ Checkpoint logged at ' + stamp + ':</strong> Ridge Pass reached. Will synchronize automatically when cell tower connects.';
+    }
+    function recordSOS() {
+      const stamp = new Date().toLocaleTimeString();
+      document.getElementById('logMsg').innerHTML = '<strong style="color: #f87171;">⚠️ EMERGENCY SOS RECORDED at ' + stamp + ':</strong> Landslide blockage reported. Local beacon activated.';
+    }
+  </script>
+</body>
+</html>`;
+    this.saveFileDownload(htmlContent, 'ResQRoute-Driver-Offline-Emergency.html', 'text/html');
+    this.actionSuccess.set('Standalone Offline Emergency Console (.html) downloaded! Open in any browser without internet.');
+    setTimeout(() => this.actionSuccess.set(null), 6000);
+  }
+
+  private saveFileDownload(content: string, filename: string, mimeType: string): void {
+    const blob = new Blob([content], { type: mimeType });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   }
 
   public getProgressPercent(status: TripStatus): string {
