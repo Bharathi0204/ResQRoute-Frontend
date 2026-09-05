@@ -546,6 +546,12 @@
   padding-right: 44px;
 }
 
+/* Hide Microsoft Edge native reveal eye button to prevent overlap with custom eye toggle */
+.input-wrapper input::-ms-reveal,
+.input-wrapper input::-ms-clear {
+  display: none;
+}
+
 .input-wrapper input:focus,
 .input-wrapper select:focus {
   border-color: #1d4ed8;

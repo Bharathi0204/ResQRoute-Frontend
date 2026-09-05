@@ -461,19 +461,21 @@
 
           <div class="form-row two-col">
             <div class="field-item">
-              <label>Password <span class="req">*</span></label>
+              <label for="register-password">Password <span class="req">*</span></label>
               <div class="input-wrapper">
                 <i class='bx bx-lock-alt'></i>
                 <input 
+                  id="register-password"
+                  name="password"
                   [type]="showRegisterPassword() ? 'text' : 'password'" 
                   formControlName="password" 
                   placeholder="Create a password" 
+                  autocomplete="new-password"
                   required>
                 <button 
                   type="button" 
                   class="eye-btn" 
                   (click)="toggleRegisterPassword()" 
-                  (mousedown)="$event.preventDefault()"
                   [attr.aria-label]="showRegisterPassword() ? 'Hide password' : 'Show password'"
                   tabindex="-1">
                   <i class='bx' [class.bx-show]="!showRegisterPassword()" [class.bx-hide]="showRegisterPassword()"></i>
@@ -482,20 +484,21 @@
             </div>
 
             <div class="field-item">
-              <label>Confirm Password <span class="req">*</span></label>
+              <label for="register-confirm-password">Confirm Password <span class="req">*</span></label>
               <div class="input-wrapper">
                 <i class='bx bx-lock-alt'></i>
                 <input 
+                  id="register-confirm-password"
+                  name="confirmPassword"
                   [type]="showConfirmPassword() ? 'text' : 'password'" 
                   formControlName="confirmPassword" 
                   placeholder="Confirm your password" 
-                  (paste)="onConfirmPasswordPaste($event)"
+                  autocomplete="new-password"
                   required>
                 <button 
                   type="button" 
                   class="eye-btn" 
                   (click)="toggleConfirmPassword()" 
-                  (mousedown)="$event.preventDefault()"
                   [attr.aria-label]="showConfirmPassword() ? 'Hide password' : 'Show password'"
                   tabindex="-1">
                   <i class='bx' [class.bx-show]="!showConfirmPassword()" [class.bx-hide]="showConfirmPassword()"></i>
@@ -552,7 +555,7 @@
 
           <div class="field-item mb-16">
             <div class="label-with-action">
-              <label>Password <span class="req">*</span></label>
+              <label for="login-password">Password <span class="req">*</span></label>
               <button type="button" class="forgot-link-btn" (click)="setViewMode('forgot')">
                 Forgot Password?
               </button>
@@ -560,15 +563,17 @@
             <div class="input-wrapper">
               <i class='bx bx-lock-alt'></i>
               <input 
+                id="login-password"
+                name="password"
                 [type]="showLoginPassword() ? 'text' : 'password'" 
                 formControlName="password" 
                 placeholder="Enter your password" 
+                autocomplete="current-password"
                 required>
               <button 
                 type="button" 
                 class="eye-btn" 
                 (click)="toggleLoginPassword()" 
-                (mousedown)="$event.preventDefault()"
                 [attr.aria-label]="showLoginPassword() ? 'Hide password' : 'Show password'"
                 tabindex="-1">
                 <i class='bx' [class.bx-show]="!showLoginPassword()" [class.bx-hide]="showLoginPassword()"></i>
