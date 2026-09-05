@@ -605,8 +605,8 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
   styles: [`
     .dashboard-container {
       min-height: 100vh;
-      background: #090e17;
-      color: #f8fafc;
+      background: #f8fafc;
+      color: #0f172a;
       font-family: 'Poppins', sans-serif;
       padding-bottom: 48px;
     }
@@ -616,8 +616,9 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       justify-content: space-between;
       align-items: center;
       padding: 16px 32px;
-      background: #111827;
-      border-bottom: 1px solid #1f2937;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
 
     .brand {
@@ -631,22 +632,25 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       object-fit: contain;
       border-radius: 10px;
       image-rendering: -webkit-optimize-contrast;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-      background: #091a36;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      background: #ffffff;
       padding: 2px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid #e2e8f0;
     }
     .brand-title {
       font-size: 16px;
       letter-spacing: 0.5px;
-      color: #f8fafc;
+      color: #0f172a;
+      font-weight: 600;
     }
     .brand-title strong {
-      color: #f59e0b;
+      color: #b45309;
+      font-weight: 700;
     }
     .brand-subtitle {
       font-size: 11px;
-      color: #94a3b8;
+      color: #64748b;
+      font-weight: 500;
     }
 
     .nav-right {
@@ -662,19 +666,19 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       font-weight: 600;
       padding: 5px 12px;
       border-radius: 20px;
-      background: rgba(245, 158, 11, 0.12);
-      color: #f59e0b;
-      border: 1px solid rgba(245, 158, 11, 0.2);
+      background: #fffbeb;
+      color: #b45309;
+      border: 1px solid #fde68a;
     }
     .status-indicator.online {
-      background: rgba(16, 185, 129, 0.12);
-      color: #34d399;
-      border-color: rgba(16, 185, 129, 0.25);
+      background: #ecfdf5;
+      color: #047857;
+      border-color: #a7f3d0;
     }
     .status-indicator .dot {
       width: 8px;
       height: 8px;
-      background: #f59e0b;
+      background: #d97706;
       border-radius: 50%;
     }
     .status-indicator.online .dot {
@@ -686,40 +690,43 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       align-items: center;
       gap: 6px;
       font-size: 12.5px;
-      background: #1e293b;
+      background: #f1f5f9;
       padding: 6px 14px;
       border-radius: 20px;
-      border: 1px solid #334155;
-      color: #e2e8f0;
+      border: 1px solid #e2e8f0;
+      color: #1e293b;
+      font-weight: 600;
     }
     .user-pill i {
-      color: #38bdf8;
+      color: #0284c7;
+      font-size: 15px;
     }
 
     .logout-btn {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: #1e293b;
-      color: #f1f5f9;
-      border: 1px solid #334155;
+      background: #ffffff;
+      color: #475569;
+      border: 1px solid #cbd5e1;
       padding: 7px 16px;
       border-radius: 8px;
       cursor: pointer;
       font-size: 13px;
       font-weight: 500;
       transition: all 0.2s;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
     }
     .logout-btn:hover {
-      background: #ef4444;
+      background: #fee2e2;
       border-color: #ef4444;
-      color: #fff;
+      color: #dc2626;
     }
 
     /* Sub Navigation Tabs */
     .sub-nav {
-      background: #0f172a;
-      border-bottom: 1px solid #1e293b;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
       padding: 0 32px;
     }
     .tabs-container {
@@ -733,34 +740,39 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       gap: 8px;
       background: none;
       border: none;
-      color: #94a3b8;
+      color: #64748b;
       font-size: 13.5px;
       font-weight: 500;
       padding: 14px 18px;
       cursor: pointer;
-      border-bottom: 2px solid transparent;
+      border-bottom: 2.5px solid transparent;
       transition: all 0.2s;
       white-space: nowrap;
     }
     .tab-btn:hover {
-      color: #f1f5f9;
+      color: #0f172a;
+      background: #f8fafc;
     }
     .tab-btn.active {
-      color: #f59e0b;
-      border-bottom-color: #f59e0b;
+      color: #b45309;
+      border-bottom-color: #d97706;
       font-weight: 600;
+      background: #fffbeb;
+      border-radius: 8px 8px 0 0;
     }
     .pill-badge {
       font-size: 11px;
       padding: 2px 8px;
       border-radius: 12px;
-      background: rgba(245, 158, 11, 0.2);
-      color: #f59e0b;
+      background: #fef3c7;
+      color: #b45309;
       font-weight: 700;
+      border: 1px solid #fde68a;
     }
     .pill-badge.pending {
-      background: rgba(239, 68, 68, 0.2);
-      color: #f87171;
+      background: #fee2e2;
+      color: #dc2626;
+      border-color: #fca5a5;
     }
 
     .content {
@@ -774,18 +786,20 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid #10b981;
-      color: #34d399;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
       padding: 12px 20px;
       border-radius: 10px;
       margin-bottom: 20px;
       font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.08);
     }
     .close-alert {
       background: none;
       border: none;
-      color: #34d399;
+      color: #047857;
       font-size: 18px;
       cursor: pointer;
     }
@@ -798,25 +812,32 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       margin-bottom: 24px;
     }
     .kpi-card {
-      background: #111827;
-      border: 1px solid #1f2937;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
       border-radius: 14px;
       padding: 20px;
       display: flex;
       align-items: center;
       gap: 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+    .kpi-card:hover {
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07);
+      border-color: #cbd5e1;
+      transform: translateY(-2px);
     }
     .kpi-card.highlight {
-      border-color: rgba(245, 158, 11, 0.4);
-      background: linear-gradient(135deg, #182234 0%, #111827 100%);
+      border-color: #fcd34d;
+      background: linear-gradient(135deg, #fffdfa 0%, #fffbeb 100%);
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.1);
     }
     .kpi-icon {
       width: 48px;
       height: 48px;
       border-radius: 12px;
-      background: rgba(245, 158, 11, 0.15);
-      color: #f59e0b;
+      background: #fef3c7;
+      color: #d97706;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -824,16 +845,16 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       flex-shrink: 0;
     }
     .kpi-icon.info {
-      background: rgba(56, 189, 248, 0.15);
-      color: #38bdf8;
+      background: #e0f2fe;
+      color: #0284c7;
     }
     .kpi-icon.warning {
-      background: rgba(239, 68, 68, 0.15);
-      color: #ef4444;
+      background: #fee2e2;
+      color: #dc2626;
     }
     .kpi-icon.success {
-      background: rgba(16, 185, 129, 0.15);
-      color: #10b981;
+      background: #dcfce7;
+      color: #16a34a;
     }
     .kpi-body {
       display: flex;
@@ -841,31 +862,33 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     }
     .kpi-label {
       font-size: 11px;
-      color: #94a3b8;
+      color: #64748b;
       font-weight: 600;
       letter-spacing: 0.5px;
     }
     .kpi-val {
       font-size: 26px;
       font-weight: 700;
-      color: #f8fafc;
+      color: #0f172a;
       line-height: 1.2;
       margin: 2px 0;
     }
     .kpi-desc {
       font-size: 11.5px;
-      color: #94a3b8;
+      color: #64748b;
     }
-    .text-success { color: #34d399; }
-    .text-danger { color: #f87171; }
+    .text-success { color: #16a34a; }
+    .text-danger { color: #dc2626; }
+    .text-primary { color: #0284c7; }
 
     /* Spotlight Card: Sikkim */
     .spotlight-card {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(30, 41, 59, 0.8) 100%);
-      border: 1px solid rgba(245, 158, 11, 0.4);
+      background: linear-gradient(135deg, #fffbeb 0%, #fef9c3 100%);
+      border: 1px solid #fde68a;
       border-radius: 16px;
       padding: 24px;
       margin-bottom: 24px;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.08);
     }
     .spotlight-badge {
       display: inline-flex;
@@ -874,7 +897,7 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       font-size: 11px;
       letter-spacing: 1px;
       font-weight: 700;
-      color: #f59e0b;
+      color: #b45309;
       margin-bottom: 12px;
       text-transform: uppercase;
     }
@@ -888,11 +911,12 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     .spotlight-info h3 {
       font-size: 20px;
       margin: 0 0 8px;
-      color: #f8fafc;
+      color: #0f172a;
+      font-weight: 700;
     }
     .spotlight-info p {
       font-size: 13.5px;
-      color: #cbd5e1;
+      color: #334155;
       line-height: 1.6;
       max-width: 800px;
       margin: 0 0 14px;
@@ -903,40 +927,43 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       flex-wrap: wrap;
     }
     .chip {
-      background: #1e293b;
-      border: 1px solid #334155;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
       padding: 4px 10px;
       border-radius: 6px;
       font-size: 12px;
-      color: #cbd5e1;
+      color: #334155;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
     }
     .chip.primary {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: rgba(56, 189, 248, 0.3);
-      color: #38bdf8;
+      background: #e0f2fe;
+      border-color: #bae6fd;
+      color: #0369a1;
       font-weight: 600;
     }
     .spotlight-stat {
       display: flex;
       flex-direction: column;
       align-items: center;
-      background: #0f172a;
-      border: 1px solid rgba(245, 158, 11, 0.3);
+      background: #ffffff;
+      border: 1px solid #fde68a;
       padding: 16px 28px;
       border-radius: 14px;
       min-width: 140px;
       text-align: center;
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.08);
     }
     .stat-number {
       font-size: 38px;
       font-weight: 800;
-      color: #f59e0b;
+      color: #b45309;
       line-height: 1;
     }
     .stat-sub {
       font-size: 12px;
-      color: #94a3b8;
+      color: #64748b;
       margin: 4px 0 8px;
+      font-weight: 500;
     }
 
     /* State Filter Bar */
@@ -950,31 +977,34 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     }
     .filter-label {
       font-size: 13px;
-      color: #94a3b8;
-      font-weight: 500;
+      color: #475569;
+      font-weight: 600;
       white-space: nowrap;
       margin-right: 4px;
     }
     .state-chip {
-      background: #1e293b;
-      border: 1px solid #334155;
-      color: #cbd5e1;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #334155;
       padding: 6px 14px;
       border-radius: 20px;
       font-size: 12.5px;
       cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
       transition: all 0.2s;
       white-space: nowrap;
     }
     .state-chip:hover {
-      background: #334155;
-      color: #fff;
+      background: #f1f5f9;
+      color: #0f172a;
+      border-color: #94a3b8;
     }
     .state-chip.active {
-      background: #f59e0b;
-      color: #0f172a;
+      background: #d97706;
+      color: #ffffff;
       font-weight: 700;
-      border-color: #f59e0b;
+      border-color: #d97706;
+      box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
     }
 
     /* State Reports Grid */
@@ -985,19 +1015,22 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       margin-bottom: 28px;
     }
     .state-report-card {
-      background: #111827;
-      border: 1px solid #1f2937;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
       border-radius: 14px;
       padding: 20px;
-      transition: transform 0.2s, border-color 0.2s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
     }
     .state-report-card:hover {
-      border-color: #334155;
+      border-color: #cbd5e1;
       transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
     }
     .state-report-card.sikkim-card {
-      border-color: rgba(245, 158, 11, 0.4);
-      background: linear-gradient(135deg, #151d2c 0%, #111827 100%);
+      border-color: #fde68a;
+      background: linear-gradient(135deg, #ffffff 0%, #fffdfa 100%);
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.08);
     }
     .state-card-header {
       display: flex;
@@ -1008,11 +1041,13 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     .state-title {
       font-size: 17px;
       margin: 0 0 4px;
-      color: #f8fafc;
+      color: #0f172a;
+      font-weight: 700;
     }
     .state-trucks {
       font-size: 12px;
-      color: #38bdf8;
+      color: #0284c7;
+      font-weight: 600;
     }
     .reroute-counter {
       text-align: right;
@@ -1020,17 +1055,17 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     .reroute-counter .count {
       font-size: 26px;
       font-weight: 800;
-      color: #f59e0b;
+      color: #d97706;
       display: block;
       line-height: 1;
     }
     .reroute-counter .count-unit {
       font-size: 11px;
-      color: #94a3b8;
+      color: #64748b;
     }
     .progress-bar-container {
       height: 6px;
-      background: #1f2937;
+      background: #e2e8f0;
       border-radius: 4px;
       overflow: hidden;
       margin-bottom: 14px;
@@ -1041,22 +1076,25 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       border-radius: 4px;
     }
     .cause-block {
-      background: #0f172a;
+      background: #f8fafc;
       padding: 10px 12px;
       border-radius: 8px;
       margin-bottom: 12px;
-      border-left: 3px solid #f59e0b;
+      border-left: 3px solid #d97706;
+      border-top: 1px solid #f1f5f9;
+      border-right: 1px solid #f1f5f9;
+      border-bottom: 1px solid #f1f5f9;
     }
     .cause-title {
       font-size: 11px;
-      color: #94a3b8;
+      color: #475569;
       font-weight: 600;
       display: block;
       margin-bottom: 2px;
     }
     .cause-text {
       font-size: 12px;
-      color: #cbd5e1;
+      color: #1e293b;
       margin: 0;
       line-height: 1.4;
     }
@@ -1067,8 +1105,8 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     }
     .districts-title {
       font-size: 11px;
-      color: #94a3b8;
-      font-weight: 500;
+      color: #64748b;
+      font-weight: 600;
     }
     .district-chips {
       display: flex;
@@ -1076,20 +1114,22 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       gap: 6px;
     }
     .district-tag {
-      background: #1e293b;
+      background: #f1f5f9;
       font-size: 11px;
-      color: #94a3b8;
+      color: #334155;
+      border: 1px solid #e2e8f0;
       padding: 3px 8px;
       border-radius: 4px;
     }
 
     /* Section Container & Tables */
     .section-container {
-      background: #111827;
-      border: 1px solid #1f2937;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
       border-radius: 16px;
       padding: 24px;
       margin-bottom: 28px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     }
     .section-header {
       display: flex;
@@ -1102,40 +1142,44 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     .section-title {
       font-size: 18px;
       margin: 0 0 4px;
-      color: #f8fafc;
+      color: #0f172a;
       display: flex;
       align-items: center;
       gap: 8px;
+      font-weight: 700;
     }
     .section-subtitle {
       font-size: 13px;
-      color: #94a3b8;
+      color: #64748b;
       margin: 0;
     }
     .log-count-badge {
       font-size: 12px;
-      background: #1e293b;
-      color: #38bdf8;
+      background: #e0f2fe;
+      color: #0369a1;
       padding: 6px 14px;
       border-radius: 20px;
       font-weight: 600;
-      border: 1px solid #334155;
+      border: 1px solid #bae6fd;
     }
     .refresh-btn {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: #1e293b;
-      color: #f8fafc;
-      border: 1px solid #334155;
+      background: #ffffff;
+      color: #334155;
+      border: 1px solid #cbd5e1;
       padding: 8px 16px;
       border-radius: 8px;
       font-size: 13px;
       cursor: pointer;
+      font-weight: 500;
       transition: all 0.2s;
     }
     .refresh-btn:hover {
-      background: #334155;
+      background: #f1f5f9;
+      color: #0f172a;
+      border-color: #94a3b8;
     }
 
     .table-responsive {
@@ -1148,23 +1192,23 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       font-size: 13px;
     }
     .data-table th {
-      background: #0f172a;
-      color: #94a3b8;
+      background: #f8fafc;
+      color: #475569;
       font-weight: 600;
       padding: 12px 16px;
-      border-bottom: 1px solid #1f2937;
+      border-bottom: 2px solid #e2e8f0;
       font-size: 11.5px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
     .data-table td {
       padding: 14px 16px;
-      border-bottom: 1px solid #1e293b;
-      color: #e2e8f0;
+      border-bottom: 1px solid #f1f5f9;
+      color: #1e293b;
       vertical-align: middle;
     }
     .data-table tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
+      background: #f8fafc;
     }
 
     .from-to-cell {
@@ -1174,20 +1218,20 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     }
     .from-to-cell .from {
       font-weight: 600;
-      color: #f1f5f9;
+      color: #0f172a;
       font-size: 12.5px;
       display: flex;
       align-items: center;
       gap: 4px;
     }
     .from-to-cell .arrow {
-      color: #64748b;
+      color: #94a3b8;
       font-size: 12px;
       padding-left: 14px;
     }
     .from-to-cell .to {
       font-weight: 600;
-      color: #34d399;
+      color: #059669;
       font-size: 12.5px;
       display: flex;
       align-items: center;
@@ -1201,11 +1245,11 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     }
     .route-orig {
       font-size: 11.5px;
-      color: #94a3b8;
+      color: #64748b;
     }
     .route-reroute {
       font-size: 12px;
-      color: #38bdf8;
+      color: #0284c7;
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -1214,39 +1258,43 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     }
     .cause-badge {
       display: inline-block;
-      background: rgba(239, 68, 68, 0.12);
-      color: #f87171;
+      background: #fee2e2;
+      color: #b91c1c;
       padding: 4px 8px;
       border-radius: 6px;
       font-size: 11px;
       max-width: 200px;
       line-height: 1.3;
+      border: 1px solid #fecaca;
     }
     .authority-badge {
       display: inline-block;
-      background: #1e293b;
-      color: #cbd5e1;
+      background: #f1f5f9;
+      color: #334155;
       padding: 4px 8px;
       border-radius: 6px;
       font-size: 11.5px;
       font-weight: 500;
+      border: 1px solid #e2e8f0;
     }
     .code-pill {
       font-family: monospace;
-      background: #0f172a;
-      border: 1px solid #334155;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
       padding: 4px 8px;
       border-radius: 6px;
       font-size: 11.5px;
-      color: #f59e0b;
+      color: #b45309;
+      font-weight: 600;
     }
     .state-pill {
-      background: rgba(56, 189, 248, 0.12);
-      color: #38bdf8;
+      background: #e0f2fe;
+      color: #0369a1;
       padding: 4px 10px;
       border-radius: 12px;
       font-size: 11.5px;
       font-weight: 600;
+      border: 1px solid #bae6fd;
     }
     .status-pill {
       display: inline-block;
@@ -1257,16 +1305,19 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       text-transform: uppercase;
     }
     .status-pill.success {
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
     }
     .status-pill.in-transit {
-      background: rgba(56, 189, 248, 0.15);
-      color: #38bdf8;
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
     }
     .status-pill.pending {
-      background: rgba(245, 158, 11, 0.15);
-      color: #f59e0b;
+      background: #fef3c7;
+      color: #b45309;
+      border: 1px solid #fde68a;
     }
 
     /* Requests Grid */
@@ -1277,13 +1328,19 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       margin-bottom: 28px;
     }
     .request-card {
-      background: #111827;
-      border: 1px solid #1f2937;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
       border-radius: 14px;
       padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 14px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s;
+    }
+    .request-card:hover {
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+      border-color: #cbd5e1;
     }
     .request-header {
       display: flex;
@@ -1295,13 +1352,13 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       align-items: center;
       gap: 6px;
       font-family: monospace;
-      background: #0f172a;
-      color: #f59e0b;
+      background: #f8fafc;
+      color: #b45309;
       padding: 4px 10px;
       border-radius: 6px;
       font-size: 12px;
       font-weight: 700;
-      border: 1px solid rgba(245, 158, 11, 0.3);
+      border: 1px solid #fde68a;
     }
     .badge-status {
       font-size: 11px;
@@ -1310,28 +1367,31 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       border-radius: 10px;
     }
     .badge-status.pending {
-      background: rgba(245, 158, 11, 0.15);
-      color: #f59e0b;
+      background: #fef3c7;
+      color: #b45309;
+      border: 1px solid #fde68a;
     }
     .badge-status.in-progress {
-      background: rgba(56, 189, 248, 0.15);
-      color: #38bdf8;
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
     }
 
     .official-name {
       font-size: 17px;
       margin: 0 0 2px;
-      color: #f8fafc;
+      color: #0f172a;
+      font-weight: 700;
     }
     .designation-text {
       font-size: 13.5px;
-      color: #38bdf8;
-      font-weight: 500;
+      color: #0284c7;
+      font-weight: 600;
       margin-bottom: 4px;
     }
     .dept-text {
       font-size: 12px;
-      color: #94a3b8;
+      color: #475569;
       display: flex;
       align-items: center;
       gap: 4px;
@@ -1348,15 +1408,16 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       margin-right: 6px;
     }
     .meta-value {
-      color: #cbd5e1;
-      font-weight: 500;
+      color: #1e293b;
+      font-weight: 600;
     }
     .address-box {
-      background: #0f172a;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
       padding: 8px 12px;
       border-radius: 6px;
       font-size: 11.5px;
-      color: #94a3b8;
+      color: #475569;
       display: flex;
       align-items: flex-start;
       gap: 6px;
@@ -1371,11 +1432,11 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     .btn-approve {
       flex: 1;
       background: #10b981;
-      color: #0f172a;
+      color: #ffffff;
       border: none;
       padding: 9px;
       border-radius: 8px;
-      font-weight: 700;
+      font-weight: 600;
       font-size: 12.5px;
       cursor: pointer;
       display: inline-flex;
@@ -1383,15 +1444,19 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       justify-content: center;
       gap: 6px;
       transition: all 0.2s;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
     }
     .btn-approve:hover {
       background: #059669;
-      color: #fff;
+    }
+    .btn-approve:disabled, .btn-reject:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
     .btn-reject {
-      background: #1e293b;
-      color: #ef4444;
-      border: 1px solid #334155;
+      background: #ffffff;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
       padding: 9px 14px;
       border-radius: 8px;
       font-weight: 600;
@@ -1400,16 +1465,18 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       transition: all 0.2s;
     }
     .btn-reject:hover {
-      background: #ef4444;
-      color: #fff;
+      background: #fee2e2;
+      border-color: #ef4444;
+      color: #dc2626;
     }
 
     .empty-state-card {
-      background: #111827;
-      border: 1px solid #1f2937;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
       border-radius: 14px;
       padding: 48px;
       text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
     }
     .empty-state-card i {
       font-size: 48px;
@@ -1419,11 +1486,12 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     .empty-state-card h4 {
       font-size: 18px;
       margin: 0 0 6px;
-      color: #f8fafc;
+      color: #0f172a;
+      font-weight: 700;
     }
     .empty-state-card p {
       font-size: 13.5px;
-      color: #94a3b8;
+      color: #64748b;
       margin: 0;
     }
 
@@ -1441,16 +1509,19 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     }
     .search-input-wrapper input {
       width: 100%;
-      background: #0f172a;
-      border: 1px solid #334155;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
       border-radius: 8px;
       padding: 8px 12px 8px 36px;
-      color: #f8fafc;
+      color: #0f172a;
       font-size: 13px;
       outline: none;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      transition: all 0.2s;
     }
     .search-input-wrapper input:focus {
-      border-color: #f59e0b;
+      border-color: #d97706;
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
     }
 
     .official-cell {
@@ -1462,13 +1533,13 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       width: 34px;
       height: 34px;
       border-radius: 50%;
-      background: #1e293b;
-      color: #f59e0b;
+      background: #fef3c7;
+      color: #b45309;
       font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid #334155;
+      border: 1px solid #fde68a;
       font-size: 14px;
     }
     .sub-text {
@@ -1477,7 +1548,8 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
     }
     .contact-sub {
       font-size: 12px;
-      color: #e2e8f0;
+      color: #1e293b;
+      font-weight: 500;
     }
     .text-muted {
       color: #64748b;
@@ -1488,28 +1560,31 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      border: 1px solid #334155;
+      background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+      border: 1px solid #bae6fd;
       padding: 32px;
       border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 20px rgba(2, 132, 199, 0.06);
       margin-bottom: 24px;
     }
     .badge {
       font-size: 11px;
       letter-spacing: 1.5px;
-      background: rgba(245, 158, 11, 0.2);
-      color: #f59e0b;
+      background: #fef3c7;
+      color: #b45309;
       padding: 4px 10px;
       border-radius: 8px;
       font-weight: 700;
+      border: 1px solid #fde68a;
     }
     .hero-card h1 {
       margin: 12px 0 6px;
       font-size: 26px;
+      color: #0f172a;
+      font-weight: 700;
     }
     .hero-card .sub {
-      color: #94a3b8;
+      color: #475569;
       margin: 0;
       font-size: 14px;
     }
@@ -1518,21 +1593,22 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       flex-direction: column;
       align-items: center;
       gap: 2px;
-      background: rgba(255, 255, 255, 0.05);
+      background: #ffffff;
       padding: 16px 20px;
       border-radius: 16px;
-      border: 1px solid #334155;
+      border: 1px solid #bae6fd;
       font-size: 16px;
       font-weight: 700;
-      color: #38bdf8;
+      color: #0284c7;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
     .server-badge i {
       font-size: 32px;
     }
     .server-badge small {
       font-size: 11px;
-      color: #94a3b8;
-      font-weight: 400;
+      color: #64748b;
+      font-weight: 500;
     }
     .cards-grid {
       display: grid;
@@ -1541,39 +1617,48 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       margin-bottom: 24px;
     }
     .card {
-      background: #1e293b;
-      border: 1px solid #334155;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
       padding: 24px;
       border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
     }
     .card-icon {
       font-size: 28px;
-      color: #f59e0b;
+      color: #d97706;
       margin-bottom: 12px;
     }
     .card h4 {
       margin: 0 0 6px;
       font-size: 13px;
-      color: #94a3b8;
+      color: #64748b;
       text-transform: uppercase;
       letter-spacing: 0.8px;
+      font-weight: 600;
     }
     .card .val {
       font-size: 18px;
-      font-weight: 600;
+      font-weight: 700;
       margin: 0 0 12px;
-      color: #f8fafc;
+      color: #0f172a;
     }
     .card .tag {
       font-size: 11px;
-      background: #0f172a;
+      background: #f8fafc;
       padding: 4px 10px;
       border-radius: 8px;
-      color: #f59e0b;
+      color: #b45309;
       font-weight: 600;
+      border: 1px solid #e2e8f0;
     }
     .build-plan-banner {
-      background: #1e293b;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
       border-left: 4px solid #10b981;
       padding: 20px 24px;
       border-radius: 12px;
@@ -1583,20 +1668,21 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       align-items: center;
       gap: 8px;
       margin: 0 0 6px;
-      color: #34d399;
+      color: #047857;
       font-size: 16px;
+      font-weight: 700;
     }
     .build-plan-banner p {
       margin: 0;
-      color: #94a3b8;
+      color: #334155;
       font-size: 13.5px;
       line-height: 1.6;
     }
 
     .temp-pass-code {
-      background: #0f172a;
-      color: #38bdf8;
-      border: 1px solid #0284c7;
+      background: #f0f9ff;
+      color: #0284c7;
+      border: 1px solid #bae6fd;
       padding: 3px 8px;
       border-radius: 6px;
       font-weight: 700;
@@ -1604,8 +1690,9 @@ import { HealthResponse, AuthorityRequestItem, OfficialResetRequestItem, Reroute
       letter-spacing: 0.5px;
     }
     .status-pill.rejected {
-      background: rgba(239, 68, 68, 0.15);
-      color: #f87171;
+      background: #fee2e2;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
     }
     .fade-in {
       animation: fadeIn 0.3s ease-in-out;
