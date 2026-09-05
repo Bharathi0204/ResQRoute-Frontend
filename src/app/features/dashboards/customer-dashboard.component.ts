@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -11,257 +11,290 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="dashboard-container">
-      <header class="navbar">
-        <div class="brand">
-          <img src="assets/resqroute-logo.jpg" alt="ResQRoute Logo" class="brand-logo-img">
-          <div class="brand-text">
-            <span>RESQROUTE <strong>OPERATIONS PORTAL</strong></span>
-            <small class="brand-sub">Northeast Logistics Corridor • MDoNER & NDMA</small>
+    <div class="customer-portal">
+      <!-- Navbar -->
+      <header class="top-nav">
+        <div class="nav-left">
+          <img src="assets/resqroute-logo.jpg" alt="Logo" class="portal-logo" />
+          <div class="portal-title-wrap">
+            <span class="portal-brand">RESQROUTE</span>
+            <span class="portal-sub">LOGISTICS & REQUISITION HUB • MDONER</span>
           </div>
         </div>
+
         <div class="nav-right">
-          <span class="status-indicator user-badge">
+          <span class="role-badge">
             <i class='bx bxs-user-pin'></i> REQUISITIONER
           </span>
-          <button class="security-btn" (click)="openPasswordModal()">
+          <button class="nav-btn" (click)="openPasswordModal()" title="Security Settings">
             <i class='bx bx-lock-alt'></i> Password
           </button>
-          <button class="logout-btn" (click)="logout()">
+          <button class="nav-btn logout" (click)="logout()" title="Logout">
             <i class='bx bx-log-out'></i> Logout
           </button>
         </div>
       </header>
 
-      <main class="content">
-        <!-- Hero Header -->
-        <div class="hero-card">
-          <div class="hero-info">
-            <span class="badge">NORTHEAST DISASTER & LOGISTICS SUPPLY</span>
+      <!-- Main Content -->
+      <main class="portal-content">
+        <!-- Hero Banner -->
+        <section class="hero-banner">
+          <div class="hero-text">
+            <span class="hero-tag">DISASTER RELIEF & SUPPLY CORRIDORS</span>
             <h1>Welcome, {{ user()?.first_name || user()?.username }}!</h1>
-            <p class="sub">{{ user()?.organization || 'Guwahati Medical College & Emergency Relief Center' }}</p>
+            <p>{{ user()?.organization || 'Guwahati Medical & Regional Emergency Logistics Authority' }}</p>
           </div>
           <div class="hero-actions">
-            <button class="create-shipment-btn" (click)="openCreateShipmentModal()">
+            <button class="btn-create-requisition" (click)="openCreateShipmentModal()">
               <i class='bx bx-plus-circle'></i> Requisition Corridor Shipment
             </button>
           </div>
-        </div>
+        </section>
 
-        <!-- Notification Banner -->
-        <div class="alert-banner success" *ngIf="actionSuccess()">
+        <!-- System Alerts -->
+        <div class="system-alert success" *ngIf="actionSuccess()">
           <i class='bx bx-check-circle'></i>
           <span>{{ actionSuccess() }}</span>
-          <button (click)="actionSuccess.set(null)">×</button>
+          <button class="dismiss-btn" (click)="actionSuccess.set(null)">×</button>
         </div>
-        <div class="alert-banner error" *ngIf="actionError()">
+        <div class="system-alert error" *ngIf="actionError()">
           <i class='bx bx-error-circle'></i>
           <span>{{ actionError() }}</span>
-          <button (click)="actionError.set(null)">×</button>
+          <button class="dismiss-btn" (click)="actionError.set(null)">×</button>
         </div>
 
-        <!-- Metric KPI Cards -->
-        <div class="kpi-grid">
+        <!-- KPI Metrics Grid -->
+        <section class="kpi-grid">
           <div class="kpi-card">
             <div class="kpi-icon blue"><i class='bx bxs-package'></i></div>
             <div class="kpi-data">
-              <span class="kpi-num">{{ shipments().length }}</span>
-              <span class="kpi-label">Total Shipments</span>
+              <span class="kpi-value">{{ shipments().length }}</span>
+              <span class="kpi-title">Total Requisitions</span>
             </div>
           </div>
+
           <div class="kpi-card">
             <div class="kpi-icon amber"><i class='bx bxs-truck'></i></div>
             <div class="kpi-data">
-              <span class="kpi-num">{{ inTransitCount() }}</span>
-              <span class="kpi-label">Active In-Transit</span>
+              <span class="kpi-value">{{ inTransitCount() }}</span>
+              <span class="kpi-title">Active In-Transit</span>
             </div>
           </div>
+
           <div class="kpi-card">
             <div class="kpi-icon green"><i class='bx bx-check-shield'></i></div>
             <div class="kpi-data">
-              <span class="kpi-num">{{ deliveredCount() }}</span>
-              <span class="kpi-label">Delivered & Verified</span>
+              <span class="kpi-value">{{ deliveredCount() }}</span>
+              <span class="kpi-title">Delivered & Verified</span>
             </div>
           </div>
+
           <div class="kpi-card">
             <div class="kpi-icon purple"><i class='bx bx-brain'></i></div>
             <div class="kpi-data">
-              <span class="kpi-num">100%</span>
-              <span class="kpi-label">AI Corridor Scored</span>
+              <span class="kpi-value">100%</span>
+              <span class="kpi-title">OpenAI Scored</span>
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- Corridor Shipments Section -->
-        <div class="section-card">
-          <div class="section-header">
+        <!-- Manifests Section -->
+        <section class="manifests-panel">
+          <div class="panel-header">
             <div>
-              <h2 class="section-title">
-                <i class='bx bx-transfer-alt'></i> Corridor Requisitions & Field Manifests
-              </h2>
-              <p class="section-desc">Live dispatch manifests powered by OpenAI Risk Evaluation & Driver QR tokens.</p>
+              <h2><i class='bx bx-transfer-alt text-primary'></i> Corridor Logistics Manifests</h2>
+              <p>Requisitions equipped with live OpenAI hazard assessment and driver QR dispatch tokens.</p>
             </div>
-            <div class="section-actions">
-              <button class="refresh-btn" (click)="loadShipments()" [disabled]="isLoadingShipments()">
-                <i class='bx bx-refresh' [class.bx-spin]="isLoadingShipments()"></i> Refresh
+
+            <div class="panel-controls">
+              <!-- Search Input -->
+              <div class="search-wrap">
+                <i class='bx bx-search search-icon'></i>
+                <input 
+                  type="text" 
+                  class="search-input" 
+                  [(ngModel)]="searchQuery" 
+                  placeholder="Filter by code, route, or cargo..." 
+                />
+              </div>
+
+              <!-- Refresh Button -->
+              <button class="btn-refresh" (click)="loadShipments()" [disabled]="isLoadingShipments()">
+                <i class='bx bx-refresh' [class.bx-spin]="isLoadingShipments()"></i>
+                <span>Refresh</span>
               </button>
-              <button class="btn-sm-primary" (click)="openCreateShipmentModal()">
+
+              <!-- New Requisition Button -->
+              <button class="btn-new-req" (click)="openCreateShipmentModal()">
                 <i class='bx bx-plus'></i> New Requisition
               </button>
             </div>
           </div>
 
           <!-- Loading state -->
-          <div class="loading-state" *ngIf="isLoadingShipments() && shipments().length === 0">
+          <div class="state-message loading" *ngIf="isLoadingShipments() && shipments().length === 0">
             <i class='bx bx-loader-alt bx-spin'></i>
-            <span>Loading corridor shipments from database...</span>
+            <span>Connecting to Highland Logistics Hub...</span>
           </div>
 
           <!-- Empty state -->
-          <div class="empty-state" *ngIf="!isLoadingShipments() && shipments().length === 0">
+          <div class="state-message empty" *ngIf="!isLoadingShipments() && filteredShipments().length === 0">
             <i class='bx bx-package'></i>
-            <p>No corridor shipments created yet.</p>
-            <button class="create-shipment-btn" (click)="openCreateShipmentModal()">
-              <i class='bx bx-plus-circle'></i> Create First Shipment
+            <p *ngIf="searchQuery.trim()">No shipments match your filter "{{ searchQuery }}".</p>
+            <p *ngIf="!searchQuery.trim()">No corridor shipments found in database.</p>
+            <button class="btn-create-requisition" (click)="openCreateShipmentModal()">
+              <i class='bx bx-plus-circle'></i> Requisition First Shipment
             </button>
           </div>
 
-          <!-- Shipments Table -->
-          <div class="table-container" *ngIf="shipments().length > 0">
-            <table class="manifest-table">
+          <!-- Manifests Table -->
+          <div class="table-responsive" *ngIf="filteredShipments().length > 0">
+            <table class="data-table">
               <thead>
                 <tr>
                   <th>Shipment Code</th>
-                  <th>Cargo & Priority</th>
-                  <th>Corridor Route</th>
-                  <th>Weight</th>
-                  <th>AI Risk Score</th>
-                  <th>Status</th>
-                  <th>Driver QR Badge</th>
+                  <th>Cargo Type & Weight</th>
+                  <th>Corridor Path</th>
+                  <th>AI Hazard Score</th>
+                  <th>Current Status</th>
+                  <th>Driver Dispatch Badge</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let s of shipments()">
+                <tr *ngFor="let s of filteredShipments()">
                   <td>
-                    <div class="code-col">
-                      <span class="code-tag">{{ s.shipment_code }}</span>
-                      <small class="date-tag">{{ s.created_at | date:'shortTime' }}</small>
+                    <div class="code-cell">
+                      <strong class="code-text">{{ s.shipment_code }}</strong>
+                      <small class="time-text">{{ s.created_at | date:'short' }}</small>
                     </div>
                   </td>
                   <td>
-                    <div class="cargo-col">
-                      <span class="cargo-title">{{ formatCargo(s.cargo_type) }}</span>
-                      <span class="priority-badge" [ngClass]="s.cargo_priority.toLowerCase()">
-                        {{ s.cargo_priority }}
-                      </span>
+                    <div class="cargo-cell">
+                      <strong>{{ formatCargo(s.cargo_type) }}</strong>
+                      <div class="meta-row">
+                        <span class="priority-chip" [ngClass]="s.cargo_priority.toLowerCase()">{{ s.cargo_priority }}</span>
+                        <span class="weight-chip">{{ s.weight_kg }} kg</span>
+                      </div>
                     </div>
                   </td>
                   <td>
-                    <div class="route-col">
-                      <div class="route-point"><i class='bx bxs-circle origin-dot'></i> {{ s.origin }}</div>
-                      <div class="route-arrow"><i class='bx bx-right-arrow-alt'></i></div>
-                      <div class="route-point"><i class='bx bxs-map dest-dot'></i> {{ s.destination }}</div>
+                    <div class="path-cell">
+                      <span class="origin-tag"><i class='bx bxs-circle origin-icon'></i> {{ s.origin }}</span>
+                      <i class='bx bx-right-arrow-alt arrow-icon'></i>
+                      <span class="dest-tag"><i class='bx bxs-map-pin dest-icon'></i> {{ s.destination }}</span>
                     </div>
                   </td>
                   <td>
-                    <span class="weight-tag">{{ s.weight_kg }} kg</span>
-                  </td>
-                  <td>
-                    <div class="risk-badge" [ngClass]="s.risk_level.toLowerCase()">
+                    <div class="risk-chip" [ngClass]="s.risk_level.toLowerCase()">
                       <i class='bx' [ngClass]="getRiskIcon(s.risk_level)"></i>
                       <span>{{ s.risk_score }}/100 • {{ s.risk_level }}</span>
                     </div>
                   </td>
                   <td>
-                    <span class="status-pill" [ngClass]="s.status.toLowerCase()">
+                    <span class="status-badge" [ngClass]="s.status.toLowerCase()">
                       {{ formatStatus(s.status) }}
                     </span>
                   </td>
                   <td>
-                    <button class="qr-badge-btn" (click)="viewShipmentQR(s)">
-                      <i class='bx bx-qr-scan'></i> View QR Badge
+                    <button class="view-qr-btn" (click)="viewShipmentQR(s)">
+                      <i class='bx bx-qr-scan'></i>
+                      <span>View QR Badge</span>
                     </button>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
 
-        <!-- Account Profile Details -->
-        <div class="cards-grid">
-          <div class="card">
-            <div class="card-icon"><i class='bx bxs-user-account'></i></div>
-            <h4>Account Profile</h4>
-            <p class="val">{{ user()?.username }}</p>
-            <span class="tag">{{ user()?.email }}</span>
+        <!-- Officer Details Grid -->
+        <section class="officer-grid">
+          <div class="officer-card">
+            <div class="card-icon"><i class='bx bxs-user-detail'></i></div>
+            <h4>Officer Identity</h4>
+            <p class="card-val">{{ user()?.username }}</p>
+            <span class="card-sub">{{ user()?.email }}</span>
           </div>
 
-          <div class="card">
+          <div class="officer-card">
             <div class="card-icon"><i class='bx bxs-map-pin'></i></div>
-            <h4>Assigned Region</h4>
-            <p class="val">{{ user()?.customer_profile?.district || 'Kamrup Metropolitan' }}</p>
-            <span class="tag">{{ user()?.customer_profile?.state || 'Assam' }}</span>
+            <h4>Jurisdiction</h4>
+            <p class="card-val">{{ user()?.customer_profile?.district || 'Kamrup Metropolitan' }}</p>
+            <span class="card-sub">{{ user()?.customer_profile?.state || 'Assam' }}</span>
           </div>
 
-          <div class="card">
-            <div class="card-icon"><i class='bx bxs-phone'></i></div>
+          <div class="officer-card">
+            <div class="card-icon"><i class='bx bxs-phone-call'></i></div>
             <h4>Official Contact</h4>
-            <p class="val">{{ user()?.phone_number || '+91 98765 43210' }}</p>
-            <span class="tag">Verified Officer</span>
+            <p class="card-val">{{ user()?.phone_number || '+91 98765 43210' }}</p>
+            <span class="card-sub">Emergency Dispatch Ready</span>
           </div>
 
-          <div class="card security-card">
+          <div class="officer-card security">
             <div class="card-icon lock"><i class='bx bx-shield-quarter'></i></div>
             <h4>Account Security</h4>
-            <p class="val">Password Protected</p>
-            <button class="action-link-btn" (click)="openPasswordModal()">
+            <p class="card-val">Encrypted Access</p>
+            <button class="btn-text-action" (click)="openPasswordModal()">
               <i class='bx bx-key'></i> Update Password
             </button>
           </div>
-        </div>
+        </section>
       </main>
 
-      <!-- Create Shipment Modal -->
+      <!-- CREATE REQUISITION MODAL -->
       <div class="modal-backdrop" *ngIf="showCreateModal()" (click)="closeCreateModal()">
-        <div class="modal-dialog requisition-dialog" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <div class="modal-title-wrap">
+        <div class="modal-card req-modal" (click)="$event.stopPropagation()">
+          <div class="modal-top">
+            <div class="title-block">
               <i class='bx bx-box text-primary'></i>
               <div>
                 <h3>Requisition Corridor Shipment</h3>
-                <p class="modal-subtitle">AI-powered terrain route calculation & Field Driver QR dispatch generation</p>
+                <p>Live OpenAI route safety analysis & driver QR activation generation</p>
               </div>
             </div>
-            <button class="close-x" (click)="closeCreateModal()">×</button>
+            <button class="btn-close" (click)="closeCreateModal()">×</button>
           </div>
 
           <div class="modal-body">
+            <!-- 1-Click Preset Demonstration Buttons -->
+            <div class="presets-box">
+              <small><i class='bx bx-bolt-circle'></i> 1-CLICK DEMO CORRIDOR PRESETS:</small>
+              <div class="preset-chips">
+                <button type="button" class="preset-chip" (click)="applyPreset('silchar')">
+                  Vaccines: Guwahati → Silchar (Critical, 650kg)
+                </button>
+                <button type="button" class="preset-chip" (click)="applyPreset('gangtok')">
+                  Rations: Siliguri → Gangtok (High, 1200kg)
+                </button>
+                <button type="button" class="preset-chip" (click)="applyPreset('aizawl')">
+                  Tents: Shillong → Aizawl (Relief, 800kg)
+                </button>
+              </div>
+            </div>
+
             <div class="form-row">
               <div class="form-group">
-                <label>Corridor Origin Hub <span class="req">*</span></label>
-                <select [(ngModel)]="newOrigin" class="form-control" (change)="onRouteChanged()">
+                <label>Origin Hub <span class="req">*</span></label>
+                <select [(ngModel)]="newOrigin" class="input-ctrl" (change)="onRouteChanged()">
                   <option value="Guwahati Central Medical Hub">Guwahati Central Medical Hub (Assam)</option>
-                  <option value="Siliguri Food Relief Base">Siliguri Food Relief Base (West Bengal/Sikkim)</option>
+                  <option value="Siliguri Food Relief Base">Siliguri Food Relief Base (West Bengal)</option>
                   <option value="Shillong Emergency Store">Shillong Emergency Store (Meghalaya)</option>
                   <option value="Dimapur Logistics Point">Dimapur Logistics Point (Nagaland)</option>
                   <option value="Agartala Supply Depot">Agartala Supply Depot (Tripura)</option>
                   <option value="Aizawl Distribution Hub">Aizawl Distribution Hub (Mizoram)</option>
                   <option value="Imphal Relief Headquarters">Imphal Relief Headquarters (Manipur)</option>
-                  <option value="Itanagar Field Base">Itanagar Field Base (Arunachal)</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>Corridor Destination Base <span class="req">*</span></label>
-                <select [(ngModel)]="newDestination" class="form-control" (change)="onRouteChanged()">
+                <label>Destination Base <span class="req">*</span></label>
+                <select [(ngModel)]="newDestination" class="input-ctrl" (change)="onRouteChanged()">
                   <option value="Silchar Civil Hospital">Silchar Civil Hospital (Assam - Barak Valley)</option>
                   <option value="Gangtok District Emergency Store">Gangtok District Emergency Store (Sikkim)</option>
                   <option value="Aizawl Civil Hospital">Aizawl Civil Hospital (Mizoram)</option>
                   <option value="Kohima Relief Center">Kohima Relief Center (Nagaland)</option>
                   <option value="Tawang District Hospital">Tawang District Hospital (Arunachal Pradesh)</option>
                   <option value="Churachandpur Emergency Depot">Churachandpur Emergency Depot (Manipur)</option>
-                  <option value="Dharmanagar Sub-Divisional Base">Dharmanagar Sub-Divisional Base (Tripura)</option>
                 </select>
               </div>
             </div>
@@ -269,7 +302,7 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
             <div class="form-row">
               <div class="form-group">
                 <label>Cargo Type <span class="req">*</span></label>
-                <select [(ngModel)]="newCargoType" class="form-control">
+                <select [(ngModel)]="newCargoType" class="input-ctrl">
                   <option value="MEDICINE">Critical Medicine & Vaccines (Cold-Chain)</option>
                   <option value="FOOD">Emergency Rations & Potable Drinking Water</option>
                   <option value="RELIEF">Disaster Relief Supplies & Tents</option>
@@ -280,7 +313,7 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
 
               <div class="form-group">
                 <label>Priority Clearance <span class="req">*</span></label>
-                <select [(ngModel)]="newPriority" class="form-control">
+                <select [(ngModel)]="newPriority" class="input-ctrl">
                   <option value="CRITICAL">Critical Priority (Life-Saving Emergency)</option>
                   <option value="HIGH">High Priority (Expedited Corridor Clearance)</option>
                   <option value="NORMAL">Standard Priority</option>
@@ -291,41 +324,41 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
             <div class="form-row">
               <div class="form-group">
                 <label>Cargo Weight (kg) <span class="req">*</span></label>
-                <input type="number" [(ngModel)]="newWeight" min="1" max="25000" class="form-control" placeholder="e.g. 750" />
+                <input type="number" [(ngModel)]="newWeight" min="1" max="25000" class="input-ctrl" placeholder="e.g. 750" />
               </div>
 
               <div class="form-group">
-                <label>Specific Delivery Address / Facility</label>
-                <input type="text" [(ngModel)]="newAddress" class="form-control" placeholder="e.g. Medical Depot, NH-6 Junction" />
+                <label>Specific Delivery Facility / Street</label>
+                <input type="text" [(ngModel)]="newAddress" class="input-ctrl" placeholder="e.g. Civil Hospital Compound, NH-6" />
               </div>
             </div>
 
             <div class="form-group">
-              <label>Special Transit Instructions</label>
-              <input type="text" [(ngModel)]="newInstructions" class="form-control" placeholder="e.g. Fragile vials; Maintain temperature below 8°C; Escort required." />
+              <label>Special Handling Instructions</label>
+              <input type="text" [(ngModel)]="newInstructions" class="input-ctrl" placeholder="e.g. Cold-chain storage 2-8°C; Fragile ampoules." />
             </div>
 
-            <!-- Live AI Route Risk Pre-Evaluator -->
-            <div class="ai-preview-box">
-              <div class="ai-preview-header">
-                <div class="ai-title">
+            <!-- Live OpenAI Route Risk Simulation -->
+            <div class="ai-simulator-box">
+              <div class="sim-top">
+                <div class="sim-title">
                   <i class='bx bx-brain text-purple'></i>
-                  <strong>AI Logic Risk Engine (Live Simulation)</strong>
+                  <strong>OpenAI Route Risk Engine (Pre-Scan)</strong>
                 </div>
-                <button class="simulate-btn" (click)="simulateRisk()" [disabled]="isSimulatingRisk()">
+                <button type="button" class="btn-simulate" (click)="simulateRisk()" [disabled]="isSimulatingRisk()">
                   <i class='bx bx-pulse' [class.bx-spin]="isSimulatingRisk()"></i>
-                  {{ isSimulatingRisk() ? 'Evaluating Corridors...' : 'Analyze Route Risk' }}
+                  <span>{{ isSimulatingRisk() ? 'Evaluating Corridors...' : 'Analyze Route Risk' }}</span>
                 </button>
               </div>
 
-              <div *ngIf="simulatedRisk()" class="ai-result-panel" [ngClass]="simulatedRisk()!.risk_level.toLowerCase()">
-                <div class="ai-score-row">
+              <div class="sim-result" *ngIf="simulatedRisk()" [ngClass]="simulatedRisk()!.risk_level.toLowerCase()">
+                <div class="score-line">
                   <span class="score-pill">Risk Score: {{ simulatedRisk()!.risk_score }}/100</span>
                   <span class="level-pill">{{ simulatedRisk()!.risk_level }}</span>
-                  <span class="engine-tag"><i class='bx bx-check'></i> {{ simulatedRisk()!.engine || 'OpenAI GPT-4o-mini' }}</span>
+                  <span class="engine-note"><i class='bx bx-check'></i> {{ simulatedRisk()!.engine || 'OpenAI GPT-4o-mini' }}</span>
                 </div>
-                <p class="ai-summary">{{ simulatedRisk()!.risk_summary }}</p>
-                <div class="ai-route" *ngIf="simulatedRisk()!.recommended_route">
+                <p class="summary-text">{{ simulatedRisk()!.risk_summary }}</p>
+                <div class="route-note" *ngIf="simulatedRisk()!.recommended_route">
                   <i class='bx bx-navigation'></i> <strong>Recommended Route:</strong> {{ simulatedRisk()!.recommended_route }}
                 </div>
               </div>
@@ -333,77 +366,77 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
           </div>
 
           <div class="modal-footer">
-            <button class="cancel-btn" (click)="closeCreateModal()" [disabled]="isSubmittingShipment()">
-              Cancel
-            </button>
-            <button class="submit-btn" (click)="submitShipment()" [disabled]="isSubmittingShipment()">
+            <button class="btn-dialog-cancel" (click)="closeCreateModal()" [disabled]="isSubmittingShipment()">Cancel</button>
+            <button class="btn-dialog-submit" (click)="submitShipment()" [disabled]="isSubmittingShipment()">
               <i class='bx bx-loader-alt bx-spin' *ngIf="isSubmittingShipment()"></i>
               <i class='bx bx-check-double' *ngIf="!isSubmittingShipment()"></i>
-              {{ isSubmittingShipment() ? 'Generating QR Badge...' : 'Submit Requisition & Issue Driver QR' }}
+              <span>{{ isSubmittingShipment() ? 'Generating Dispatch Badge...' : 'Submit Requisition & Issue Driver QR' }}</span>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- QR Badge & AI Assessment Display Modal -->
+      <!-- DRIVER DISPATCH QR BADGE MODAL -->
       <div class="modal-backdrop" *ngIf="selectedShipmentForQR()" (click)="closeQRModal()">
-        <div class="modal-dialog qr-dialog" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <div class="modal-title-wrap">
+        <div class="modal-card qr-modal" (click)="$event.stopPropagation()">
+          <div class="modal-top">
+            <div class="title-block">
               <i class='bx bx-qr-scan text-primary'></i>
               <div>
                 <h3>Field Driver Dispatch Badge</h3>
-                <p class="modal-subtitle">Present or transmit this secure QR token to field driver for instant trip activation</p>
+                <p>Present or transmit this QR badge to field driver for instantaneous PWA trip activation</p>
               </div>
             </div>
-            <button class="close-x" (click)="closeQRModal()">×</button>
+            <button class="btn-close" (click)="closeQRModal()">×</button>
           </div>
 
-          <div class="modal-body qr-modal-body" *ngIf="selectedShipmentForQR() as s">
-            <div class="qr-badge-card">
+          <div class="modal-body qr-modal-grid" *ngIf="selectedShipmentForQR() as s">
+            <!-- QR Card -->
+            <div class="qr-visual-card">
               <div class="badge-head">
-                <span class="badge-shipment-id">{{ s.shipment_code }}</span>
-                <span class="priority-badge" [ngClass]="s.cargo_priority.toLowerCase()">{{ s.cargo_priority }}</span>
+                <span class="shipment-code-title">{{ s.shipment_code }}</span>
+                <span class="priority-chip" [ngClass]="s.cargo_priority.toLowerCase()">{{ s.cargo_priority }}</span>
               </div>
 
-              <!-- Vector SVG QR Display -->
-              <div class="qr-svg-container" [innerHTML]="getSanitizedSvg(s.qr_svg)"></div>
+              <!-- Pure SVG Vector QR -->
+              <div class="qr-svg-holder" [innerHTML]="getSanitizedSvg(s.qr_svg)"></div>
 
-              <div class="qr-token-wrap">
-                <small class="token-lbl">CRYPTOGRAPHIC QR TOKEN</small>
-                <div class="token-code-row">
+              <!-- Token with 1-click Copy -->
+              <div class="token-container">
+                <small>DISPATCH VERIFICATION TOKEN</small>
+                <div class="token-input-row">
                   <code>{{ s.qr_token }}</code>
-                  <button class="copy-btn" (click)="copyToken(s.qr_token)">
+                  <button class="copy-token-btn" (click)="copyToken(s.qr_token)">
                     <i class='bx' [ngClass]="isCopied() ? 'bx-check' : 'bx-copy'"></i>
-                    {{ isCopied() ? 'Copied!' : 'Copy' }}
+                    <span>{{ isCopied() ? 'Copied!' : 'Copy' }}</span>
                   </button>
                 </div>
               </div>
 
-              <div class="badge-meta">
+              <div class="badge-manifest-info">
                 <div><strong>Origin:</strong> {{ s.origin }}</div>
                 <div><strong>Destination:</strong> {{ s.destination }}</div>
                 <div><strong>Cargo:</strong> {{ formatCargo(s.cargo_type) }} ({{ s.weight_kg }} kg)</div>
               </div>
             </div>
 
-            <!-- AI Risk Details Card -->
-            <div class="ai-details-card">
+            <!-- AI Risk Breakdown -->
+            <div class="ai-report-card">
               <h4><i class='bx bx-brain text-purple'></i> Route Safety Assessment</h4>
               <div class="risk-badge-large" [ngClass]="s.risk_level.toLowerCase()">
                 <i class='bx' [ngClass]="getRiskIcon(s.risk_level)"></i>
                 <span>Hazard Rating: {{ s.risk_score }}/100 • {{ s.risk_level }}</span>
               </div>
-              <p class="ai-desc">{{ s.risk_summary }}</p>
+              <p class="risk-desc">{{ s.risk_summary }}</p>
 
-              <div class="risk-factors" *ngIf="s.risk_factors && s.risk_factors.length > 0">
+              <div class="hazard-list" *ngIf="s.risk_factors && s.risk_factors.length > 0">
                 <h5>Terrain & Weather Hazards:</h5>
                 <ul>
                   <li *ngFor="let f of s.risk_factors">{{ f }}</li>
                 </ul>
               </div>
 
-              <div class="rec-route" *ngIf="s.recommended_route">
+              <div class="route-advisory-box" *ngIf="s.recommended_route">
                 <i class='bx bxs-directions'></i>
                 <div>
                   <strong>Recommended Mountain Corridor:</strong>
@@ -411,48 +444,48 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
                 </div>
               </div>
 
-              <div class="driver-instructions-alert">
+              <div class="driver-help-alert">
                 <i class='bx bx-info-circle'></i>
-                <span>The driver can open their Driver PWA, click <strong>Activate Trip</strong>, and scan this QR code or input code <strong>{{ s.shipment_code }}</strong> to commence dispatch.</span>
+                <span>The driver can open their Driver PWA, click <strong>Activate Mission with QR</strong>, and scan this QR code or input code <strong>{{ s.shipment_code }}</strong> to commence dispatch.</span>
               </div>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button class="submit-btn" (click)="closeQRModal()">
+            <button class="btn-dialog-submit" (click)="closeQRModal()">
               <i class='bx bx-check'></i> Done
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Change Password Modal -->
+      <!-- PASSWORD CHANGE MODAL -->
       <div class="modal-backdrop" *ngIf="showPasswordModal()" (click)="closePasswordModal()">
-        <div class="modal-dialog" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <div class="modal-title-wrap">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-top">
+            <div class="title-block">
               <i class='bx bx-lock-alt text-primary'></i>
               <h3>Update Account Password</h3>
             </div>
-            <button class="close-x" (click)="closePasswordModal()">×</button>
+            <button class="btn-close" (click)="closePasswordModal()">×</button>
           </div>
 
           <div class="modal-body">
-            <div class="alert-banner error" *ngIf="passwordError()">
+            <div class="system-alert error" *ngIf="passwordError()">
               <i class='bx bx-error-circle'></i>
               <span>{{ passwordError() }}</span>
             </div>
 
             <div class="form-group">
               <label>Current Password</label>
-              <div class="password-input-wrap">
+              <div class="pass-input-wrap">
                 <input 
                   [type]="showCurrentPassword() ? 'text' : 'password'" 
-                  class="form-control" 
+                  class="input-ctrl" 
                   [(ngModel)]="currentPassword" 
                   placeholder="Enter current password" 
                 />
-                <button type="button" class="eye-toggle-btn" (click)="toggleCurrentPass()">
+                <button type="button" class="eye-toggle" (click)="showCurrentPassword.update(v => !v)">
                   <i class='bx' [ngClass]="showCurrentPassword() ? 'bx-hide' : 'bx-show'"></i>
                 </button>
               </div>
@@ -460,14 +493,14 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
 
             <div class="form-group">
               <label>New Password (min 8 characters)</label>
-              <div class="password-input-wrap">
+              <div class="pass-input-wrap">
                 <input 
                   [type]="showNewPassword() ? 'text' : 'password'" 
-                  class="form-control" 
+                  class="input-ctrl" 
                   [(ngModel)]="newPassword" 
                   placeholder="Enter new password" 
                 />
-                <button type="button" class="eye-toggle-btn" (click)="toggleNewPass()">
+                <button type="button" class="eye-toggle" (click)="showNewPassword.update(v => !v)">
                   <i class='bx' [ngClass]="showNewPassword() ? 'bx-hide' : 'bx-show'"></i>
                 </button>
               </div>
@@ -475,24 +508,20 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
 
             <div class="form-group">
               <label>Confirm New Password</label>
-              <div class="password-input-wrap">
-                <input 
-                  type="password" 
-                  class="form-control" 
-                  [(ngModel)]="confirmNewPassword" 
-                  placeholder="Confirm new password" 
-                />
-              </div>
+              <input 
+                type="password" 
+                class="input-ctrl" 
+                [(ngModel)]="confirmNewPassword" 
+                placeholder="Repeat new password" 
+              />
             </div>
           </div>
 
           <div class="modal-footer">
-            <button class="cancel-btn" (click)="closePasswordModal()" [disabled]="passwordLoading()">
-              Cancel
-            </button>
-            <button class="submit-btn" (click)="submitPasswordChange()" [disabled]="passwordLoading()">
+            <button class="btn-dialog-cancel" (click)="closePasswordModal()" [disabled]="passwordLoading()">Cancel</button>
+            <button class="btn-dialog-submit" (click)="submitPasswordChange()" [disabled]="passwordLoading()">
               <span *ngIf="!passwordLoading()"><i class='bx bx-check-shield'></i> Update Password</span>
-              <span *ngIf="passwordLoading()"><i class='bx bx-loader-alt bx-spin'></i> Updating...</span>
+              <span *ngIf="passwordLoading()"><i class='bx bx-loader-alt bx-spin'></i> Saving...</span>
             </button>
           </div>
         </div>
@@ -500,153 +529,162 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
     </div>
   `,
   styles: [`
-    .dashboard-container {
+    .customer-portal {
       min-height: 100vh;
       background: #f8fafc;
       color: #0f172a;
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Poppins', system-ui, -apple-system, sans-serif;
     }
-    .navbar {
+
+    /* Navbar */
+    .top-nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 32px;
+      padding: 14px 28px;
       background: #ffffff;
       border-bottom: 1px solid #e2e8f0;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-    .brand {
+    .nav-left {
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 16px;
-      color: #2563eb;
     }
-    .brand-logo-img {
+    .portal-logo {
       height: 38px;
       width: auto;
       border-radius: 8px;
     }
-    .brand-text {
+    .portal-title-wrap {
       display: flex;
       flex-direction: column;
-      line-height: 1.2;
+      line-height: 1.15;
     }
-    .brand-sub {
-      font-size: 11px;
+    .portal-brand {
+      font-size: 16px;
+      font-weight: 800;
+      color: #1e40af;
+      letter-spacing: 0.5px;
+    }
+    .portal-sub {
+      font-size: 10.5px;
       color: #64748b;
-      font-weight: 500;
-    }
-    .brand strong {
-      color: #0f172a;
-      font-weight: 700;
+      font-weight: 600;
     }
     .nav-right {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
-    .status-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 600;
+    .role-badge {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #1e40af;
+      background: #eff6ff;
       padding: 6px 12px;
       border-radius: 12px;
-      background: #eff6ff;
-      color: #2563eb;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
-    .security-btn {
+    .nav-btn {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: #f0fdf4;
-      color: #16a34a;
-      border: 1px solid #bbf7d0;
-      padding: 8px 14px;
+      padding: 7px 14px;
       border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
       transition: all 0.2s;
     }
-    .security-btn:hover { background: #dcfce7; }
-    .logout-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #fff1f2;
-      color: #e11d48;
-      border: 1px solid #fecdd3;
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-    .logout-btn:hover { background: #ffe4e6; }
+    .nav-btn:hover { background: #f1f5f9; }
+    .nav-btn.logout:hover { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
 
-    .content {
+    /* Content Area */
+    .portal-content {
       max-width: 1280px;
       margin: 0 auto;
-      padding: 28px 24px 60px;
+      padding: 24px 20px 60px;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 22px;
     }
 
-    .hero-card {
-      background: linear-gradient(135deg, #1e40af 0%, #2563eb 55%, #3b82f6 100%);
+    /* Hero Banner */
+    .hero-banner {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%);
       color: #ffffff;
-      padding: 28px 32px;
+      padding: 26px 30px;
       border-radius: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
       flex-wrap: wrap;
-      gap: 20px;
+      gap: 18px;
     }
-    .hero-info .badge {
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(8px);
-      padding: 4px 12px;
-      border-radius: 20px;
+    .hero-tag {
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.8px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      padding: 4px 10px;
+      border-radius: 12px;
     }
-    .hero-info h1 {
-      margin: 10px 0 6px;
-      font-size: 26px;
-      font-weight: 700;
+    .hero-text h1 {
+      margin: 8px 0 4px;
+      font-size: 24px;
+      font-weight: 800;
     }
-    .hero-info .sub {
-      opacity: 0.9;
-      font-size: 14px;
+    .hero-text p {
       margin: 0;
+      font-size: 13.5px;
+      opacity: 0.9;
     }
-    .create-shipment-btn {
+    .btn-create-requisition {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       background: #ffffff;
-      color: #1e40af;
+      color: #1e3a8a;
       border: none;
       padding: 12px 22px;
       border-radius: 10px;
       font-size: 14px;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
       transition: all 0.2s;
     }
-    .create-shipment-btn:hover {
+    .btn-create-requisition:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
       background: #f8fafc;
+    }
+
+    /* System Alert */
+    .system-alert {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+    .system-alert.success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .system-alert.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .dismiss-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: inherit;
     }
 
     /* KPI Grid */
@@ -663,11 +701,11 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
       display: flex;
       align-items: center;
       gap: 16px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
     .kpi-icon {
-      width: 48px;
-      height: 48px;
+      width: 46px;
+      height: 46px;
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -679,60 +717,76 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
     .kpi-icon.green { background: #ecfdf5; color: #059669; }
     .kpi-icon.purple { background: #f5f3ff; color: #7c3aed; }
     .kpi-data { display: flex; flex-direction: column; }
-    .kpi-num { font-size: 24px; font-weight: 700; color: #0f172a; line-height: 1.1; }
-    .kpi-label { font-size: 12px; color: #64748b; font-weight: 500; }
+    .kpi-value { font-size: 24px; font-weight: 800; color: #0f172a; line-height: 1.1; }
+    .kpi-title { font-size: 12px; color: #64748b; font-weight: 500; }
 
-    /* Section Card */
-    .section-card {
+    /* Manifests Panel */
+    .manifests-panel {
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+      padding: 22px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.02);
     }
-    .section-header {
+    .panel-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       flex-wrap: wrap;
       gap: 14px;
     }
-    .section-title {
+    .panel-header h2 {
+      margin: 0 0 4px;
       font-size: 18px;
-      font-weight: 700;
+      font-weight: 800;
       color: #0f172a;
       display: flex;
       align-items: center;
       gap: 8px;
-      margin: 0 0 4px;
     }
-    .section-desc {
-      font-size: 13px;
-      color: #64748b;
-      margin: 0;
-    }
-    .section-actions {
+    .panel-header p { margin: 0; font-size: 13px; color: #64748b; }
+
+    .panel-controls {
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
-    .refresh-btn {
+    .search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      color: #94a3b8;
+      font-size: 16px;
+    }
+    .search-input {
+      padding: 8px 12px 8px 32px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 12.5px;
+      width: 220px;
+      outline: none;
+    }
+    .search-input:focus { border-color: #2563eb; }
+    .btn-refresh {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: #f1f5f9;
-      color: #475569;
+      background: #f8fafc;
       border: 1px solid #cbd5e1;
+      color: #475569;
       padding: 8px 14px;
       border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
-      transition: all 0.2s;
     }
-    .refresh-btn:hover { background: #e2e8f0; }
-    .btn-sm-primary {
+    .btn-new-req {
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -741,26 +795,24 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
       border: none;
       padding: 8px 16px;
       border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
-      transition: all 0.2s;
+      cursor: pointer;
     }
-    .btn-sm-primary:hover { background: #1d4ed8; }
 
     /* Table Styles */
-    .table-container {
+    .table-responsive {
       overflow-x: auto;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
     }
-    .manifest-table {
+    .data-table {
       width: 100%;
       border-collapse: collapse;
       text-align: left;
       font-size: 13px;
     }
-    .manifest-table th {
+    .data-table th {
       background: #f8fafc;
       color: #475569;
       font-weight: 600;
@@ -768,79 +820,69 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
       border-bottom: 1px solid #e2e8f0;
       white-space: nowrap;
     }
-    .manifest-table td {
+    .data-table td {
       padding: 14px 16px;
       border-bottom: 1px solid #f1f5f9;
       vertical-align: middle;
     }
-    .manifest-table tr:hover {
-      background: #f8fafc;
-    }
-    .code-col { display: flex; flex-direction: column; gap: 2px; }
-    .code-tag { font-family: monospace; font-weight: 700; color: #1e40af; font-size: 13.5px; }
-    .date-tag { font-size: 11px; color: #94a3b8; }
-    .cargo-col { display: flex; flex-direction: column; gap: 4px; }
-    .cargo-title { font-weight: 600; color: #1e293b; }
-    .priority-badge {
-      display: inline-block;
-      font-size: 10.5px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 6px;
-      width: fit-content;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }
-    .priority-badge.critical { background: #fee2e2; color: #b91c1c; }
-    .priority-badge.high { background: #fef3c7; color: #b45309; }
-    .priority-badge.normal { background: #f1f5f9; color: #475569; }
+    .data-table tr:hover { background: #f8fafc; }
 
-    .route-col {
+    .code-cell { display: flex; flex-direction: column; gap: 2px; }
+    .code-text { font-family: monospace; font-size: 14px; color: #1e40af; font-weight: 700; }
+    .time-text { font-size: 11px; color: #94a3b8; }
+
+    .cargo-cell { display: flex; flex-direction: column; gap: 4px; }
+    .cargo-cell strong { color: #1e293b; }
+    .meta-row { display: flex; gap: 6px; align-items: center; }
+    .priority-chip {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .priority-chip.critical { background: #fee2e2; color: #b91c1c; }
+    .priority-chip.high { background: #fef3c7; color: #b45309; }
+    .priority-chip.normal { background: #f1f5f9; color: #475569; }
+    .weight-chip { font-size: 11px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+
+    .path-cell {
       display: flex;
       align-items: center;
       gap: 6px;
       font-size: 12.5px;
       color: #334155;
     }
-    .origin-dot { color: #2563eb; font-size: 10px; }
-    .dest-dot { color: #16a34a; font-size: 14px; }
-    .route-arrow { color: #94a3b8; font-size: 16px; }
+    .origin-tag, .dest-tag { display: inline-flex; align-items: center; gap: 4px; }
+    .origin-icon { color: #2563eb; font-size: 10px; }
+    .dest-icon { color: #16a34a; font-size: 13px; }
+    .arrow-icon { color: #94a3b8; font-size: 16px; }
 
-    .weight-tag {
-      background: #f8fafc;
-      padding: 4px 8px;
-      border-radius: 6px;
-      border: 1px solid #e2e8f0;
-      font-family: monospace;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .risk-badge {
+    .risk-chip {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 5px 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .risk-badge.safe { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-    .risk-badge.caution { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-    .risk-badge.blocked { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-
-    .status-pill {
-      display: inline-block;
       padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 11.5px;
+      border-radius: 6px;
+      font-size: 12px;
       font-weight: 700;
     }
-    .status-pill.ready { background: #eff6ff; color: #1d4ed8; }
-    .status-pill.in_transit { background: #fef3c7; color: #b45309; }
-    .status-pill.delivered { background: #ecfdf5; color: #047857; }
+    .risk-chip.safe { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .risk-chip.caution { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    .risk-chip.blocked { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
-    .qr-badge-btn {
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .status-badge.ready { background: #eff6ff; color: #1d4ed8; }
+    .status-badge.in_transit { background: #fef3c7; color: #b45309; }
+    .status-badge.delivered { background: #ecfdf5; color: #047857; }
+
+    .view-qr-btn {
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -848,91 +890,69 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
       color: #2563eb;
       border: 1px solid #bfdbfe;
       padding: 6px 12px;
-      border-radius: 8px;
-      cursor: pointer;
+      border-radius: 6px;
       font-size: 12px;
       font-weight: 600;
-      transition: all 0.2s;
+      cursor: pointer;
       white-space: nowrap;
+      transition: all 0.2s;
     }
-    .qr-badge-btn:hover {
-      background: #2563eb;
-      color: #ffffff;
-    }
+    .view-qr-btn:hover { background: #2563eb; color: #ffffff; }
 
-    .loading-state, .empty-state {
+    .state-message {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 48px 16px;
+      padding: 40px 16px;
       gap: 12px;
       color: #64748b;
     }
-    .loading-state i, .empty-state i { font-size: 38px; color: #94a3b8; }
+    .state-message i { font-size: 36px; color: #94a3b8; }
 
-    /* Standard Cards Grid */
-    .cards-grid {
+    /* Officer Grid */
+    .officer-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
     }
-    .card {
+    .officer-card {
       background: #ffffff;
       border: 1px solid #e2e8f0;
-      border-radius: 14px;
-      padding: 20px;
+      border-radius: 12px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      position: relative;
     }
     .card-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
       background: #eff6ff;
       color: #2563eb;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      margin-bottom: 12px;
+      font-size: 18px;
+      margin-bottom: 10px;
     }
     .card-icon.lock { background: #f0fdf4; color: #16a34a; }
-    .card h4 {
-      font-size: 13px;
-      color: #64748b;
-      margin: 0 0 6px;
-      font-weight: 500;
-    }
-    .card .val {
-      font-size: 16px;
-      font-weight: 600;
-      color: #0f172a;
-      margin: 0 0 10px;
-    }
-    .card .tag {
-      font-size: 11.5px;
-      background: #f1f5f9;
-      color: #475569;
-      padding: 3px 8px;
-      border-radius: 6px;
-      width: fit-content;
-    }
-    .action-link-btn {
+    .officer-card h4 { font-size: 12px; color: #64748b; margin: 0 0 4px; font-weight: 500; }
+    .card-val { font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px; }
+    .card-sub { font-size: 11px; color: #64748b; }
+    .btn-text-action {
       background: none;
       border: none;
       color: #2563eb;
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
+      padding: 0;
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 0;
       margin-top: 4px;
     }
-    .action-link-btn:hover { text-decoration: underline; }
 
     /* Modals */
     .modal-backdrop {
@@ -946,203 +966,180 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
       z-index: 1000;
       padding: 16px;
     }
-    .modal-dialog {
+    .modal-card {
       background: #ffffff;
-      border-radius: 18px;
+      border-radius: 16px;
       width: 100%;
       max-width: 500px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
       display: flex;
       flex-direction: column;
       overflow: hidden;
       max-height: 90vh;
     }
-    .requisition-dialog { max-width: 720px; }
-    .qr-dialog { max-width: 780px; }
+    .req-modal { max-width: 720px; }
+    .qr-modal { max-width: 780px; }
 
-    .modal-header {
+    .modal-top {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      padding: 20px 24px;
+      padding: 18px 22px;
       border-bottom: 1px solid #e2e8f0;
     }
-    .modal-title-wrap {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .modal-title-wrap i { font-size: 24px; color: #2563eb; }
-    .modal-title-wrap h3 { margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; }
-    .modal-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
-    .close-x {
-      background: none;
-      border: none;
-      font-size: 24px;
-      color: #94a3b8;
-      cursor: pointer;
-    }
-    .close-x:hover { color: #0f172a; }
+    .title-block { display: flex; align-items: center; gap: 10px; }
+    .title-block i { font-size: 24px; }
+    .title-block h3 { margin: 0; font-size: 17px; font-weight: 700; color: #0f172a; }
+    .title-block p { margin: 2px 0 0; font-size: 12px; color: #64748b; }
+    .btn-close { background: none; border: none; font-size: 22px; color: #94a3b8; cursor: pointer; }
 
     .modal-body {
-      padding: 20px 24px;
+      padding: 18px 22px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-    .form-group {
+
+    /* Preset Chips */
+    .presets-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 10px 12px;
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
-    .form-group label {
-      font-size: 12.5px;
+    .presets-box small { font-size: 10.5px; font-weight: 700; color: #166534; }
+    .preset-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .preset-chip {
+      background: #ffffff;
+      border: 1px solid #86efac;
+      color: #15803d;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
       font-weight: 600;
-      color: #334155;
+      cursor: pointer;
     }
+    .preset-chip:hover { background: #dcfce7; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 12px; font-weight: 600; color: #334155; }
     .req { color: #dc2626; }
-    .form-control {
-      padding: 10px 12px;
+    .input-ctrl {
+      padding: 9px 12px;
       border: 1px solid #cbd5e1;
       border-radius: 8px;
-      font-size: 13.5px;
+      font-size: 13px;
       color: #0f172a;
       outline: none;
-      transition: border-color 0.2s;
     }
-    .form-control:focus { border-color: #2563eb; }
+    .input-ctrl:focus { border-color: #2563eb; }
 
-    /* AI Live Preview Box */
-    .ai-preview-box {
+    /* AI Simulator */
+    .ai-simulator-box {
       background: #faf5ff;
       border: 1px solid #e9d5ff;
-      border-radius: 12px;
-      padding: 16px;
+      border-radius: 10px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
-    .ai-preview-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .ai-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: #6b21a8;
-    }
-    .simulate-btn {
+    .sim-top { display: flex; justify-content: space-between; align-items: center; }
+    .sim-title { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #6b21a8; }
+    .btn-simulate {
       background: #7c3aed;
       color: #ffffff;
       border: none;
       padding: 6px 12px;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
     }
-    .simulate-btn:hover { background: #6d28d9; }
-    .ai-result-panel {
+    .sim-result {
       background: #ffffff;
-      border-radius: 8px;
-      padding: 12px;
+      border-radius: 6px;
+      padding: 10px;
       border-left: 4px solid #7c3aed;
     }
-    .ai-result-panel.safe { border-left-color: #10b981; }
-    .ai-result-panel.caution { border-left-color: #f59e0b; }
-    .ai-result-panel.blocked { border-left-color: #ef4444; }
-    .ai-score-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-    .score-pill { font-size: 11px; font-weight: 700; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; }
+    .sim-result.safe { border-left-color: #10b981; }
+    .sim-result.caution { border-left-color: #f59e0b; }
+    .sim-result.blocked { border-left-color: #ef4444; }
+    .score-line { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .score-pill { font-size: 11px; font-weight: 700; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
     .level-pill { font-size: 11px; font-weight: 700; color: #2563eb; }
-    .engine-tag { font-size: 10.5px; color: #64748b; margin-left: auto; }
-    .ai-summary { font-size: 12.5px; color: #334155; margin: 4px 0 6px; line-height: 1.4; }
-    .ai-route { font-size: 12px; color: #1e40af; }
+    .engine-note { font-size: 10px; color: #64748b; margin-left: auto; }
+    .summary-text { font-size: 12px; color: #334155; margin: 4px 0; line-height: 1.4; }
+    .route-note { font-size: 11.5px; color: #1e40af; }
 
-    /* QR Modal Specifics */
-    .qr-modal-body {
+    /* QR Modal Grid */
+    .qr-modal-grid {
       display: grid;
       grid-template-columns: 1fr 1.2fr;
-      gap: 20px;
+      gap: 18px;
     }
-    .qr-badge-card {
+    .qr-visual-card {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
-      padding: 20px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      gap: 12px;
+      gap: 10px;
     }
-    .badge-head {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      align-items: center;
-    }
-    .badge-shipment-id { font-size: 16px; font-weight: 700; color: #1e40af; font-family: monospace; }
-    .qr-svg-container {
+    .badge-head { display: flex; justify-content: space-between; width: 100%; align-items: center; }
+    .shipment-code-title { font-size: 16px; font-weight: 800; color: #1e40af; font-family: monospace; }
+    .qr-svg-holder {
       background: #ffffff;
-      padding: 12px;
-      border-radius: 12px;
+      padding: 10px;
+      border-radius: 10px;
       border: 2px dashed #cbd5e1;
-      width: 200px;
-      height: 200px;
+      width: 190px;
+      height: 190px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .qr-svg-container ::ng-deep svg {
-      width: 100%;
-      height: 100%;
-    }
-    .qr-token-wrap {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .token-lbl { font-size: 10px; color: #64748b; font-weight: 700; letter-spacing: 0.5px; }
-    .token-code-row {
+    .qr-svg-holder ::ng-deep svg { width: 100%; height: 100%; }
+
+    .token-container { width: 100%; display: flex; flex-direction: column; gap: 4px; }
+    .token-container small { font-size: 9.5px; color: #64748b; font-weight: 700; }
+    .token-input-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       background: #ffffff;
       border: 1px solid #cbd5e1;
-      padding: 6px 10px;
+      padding: 5px 8px;
       border-radius: 6px;
     }
-    .token-code-row code {
-      font-size: 12px;
+    .token-input-row code {
+      font-size: 11.5px;
       color: #0f172a;
       flex: 1;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .copy-btn {
+    .copy-token-btn {
       background: #eff6ff;
       color: #2563eb;
       border: 1px solid #bfdbfe;
-      padding: 4px 8px;
+      padding: 3px 8px;
       border-radius: 4px;
       font-size: 11px;
       font-weight: 600;
@@ -1151,125 +1148,94 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
       align-items: center;
       gap: 4px;
     }
-    .badge-meta {
+    .badge-manifest-info {
       width: 100%;
       text-align: left;
-      font-size: 11.5px;
+      font-size: 11px;
       color: #475569;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
       padding-top: 8px;
       border-top: 1px solid #e2e8f0;
     }
 
-    .ai-details-card {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .ai-details-card h4 {
-      font-size: 15px;
-      font-weight: 700;
-      color: #0f172a;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .ai-report-card { display: flex; flex-direction: column; gap: 10px; }
+    .ai-report-card h4 { margin: 0; font-size: 14px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px; }
     .risk-badge-large {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 13px;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12.5px;
       font-weight: 700;
       width: fit-content;
     }
     .risk-badge-large.safe { background: #ecfdf5; color: #065f46; }
     .risk-badge-large.caution { background: #fffbeb; color: #92400e; }
     .risk-badge-large.blocked { background: #fef2f2; color: #991b1b; }
-    .ai-desc { font-size: 13px; color: #334155; line-height: 1.5; margin: 0; }
-    .risk-factors h5 { font-size: 12px; color: #475569; margin: 0 0 4px; font-weight: 600; }
-    .risk-factors ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: #334155; }
-    .rec-route {
-      display: flex;
-      gap: 10px;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-radius: 8px;
-      padding: 10px;
-      font-size: 12.5px;
-      color: #1e40af;
-    }
-    .rec-route i { font-size: 20px; }
-    .rec-route p { margin: 2px 0 0; }
-    .driver-instructions-alert {
-      background: #f8fafc;
-      border-left: 4px solid #2563eb;
-      padding: 10px 12px;
-      font-size: 12px;
-      color: #334155;
+    .risk-desc { font-size: 12.5px; color: #334155; line-height: 1.45; margin: 0; }
+    .hazard-list h5 { font-size: 11.5px; color: #475569; margin: 0 0 3px; font-weight: 600; }
+    .hazard-list ul { margin: 0; padding-left: 16px; font-size: 12px; color: #334155; }
+    .route-advisory-box {
       display: flex;
       gap: 8px;
-      align-items: flex-start;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #1e40af;
+    }
+    .route-advisory-box i { font-size: 18px; }
+    .route-advisory-box p { margin: 2px 0 0; }
+    .driver-help-alert {
+      background: #f8fafc;
+      border-left: 3px solid #2563eb;
+      padding: 8px 10px;
+      font-size: 11.5px;
+      color: #334155;
+      display: flex;
+      gap: 6px;
       border-radius: 4px;
     }
 
     .modal-footer {
       display: flex;
       justify-content: flex-end;
-      gap: 12px;
-      padding: 16px 24px;
-      border-top: 1px solid #e2e8f0;
+      gap: 10px;
+      padding: 14px 22px;
       background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
     }
-    .cancel-btn {
-      padding: 9px 18px;
+    .btn-dialog-cancel {
+      padding: 8px 16px;
       background: #ffffff;
       border: 1px solid #cbd5e1;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
       cursor: pointer;
     }
-    .submit-btn {
-      padding: 9px 20px;
+    .btn-dialog-submit {
+      padding: 8px 18px;
       background: #2563eb;
       color: #ffffff;
       border: none;
       border-radius: 8px;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      transition: all 0.2s;
+      gap: 6px;
     }
-    .submit-btn:hover { background: #1d4ed8; }
-    .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+    .btn-dialog-submit:hover { background: #1d4ed8; }
+    .btn-dialog-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* Alert Banners */
-    .alert-banner {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
-      border-radius: 10px;
-      font-size: 13px;
-    }
-    .alert-banner.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
-    .alert-banner.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-    .alert-banner button { margin-left: auto; background: none; border: none; font-size: 18px; cursor: pointer; color: inherit; }
-
-    .password-input-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-    .eye-toggle-btn {
+    .pass-input-wrap { position: relative; display: flex; align-items: center; }
+    .eye-toggle {
       position: absolute;
       right: 10px;
       background: none;
@@ -1280,11 +1246,11 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
     }
 
     @media (max-width: 768px) {
-      .qr-modal-body { grid-template-columns: 1fr; }
+      .qr-modal-grid { grid-template-columns: 1fr; }
       .form-row { grid-template-columns: 1fr; }
-      .hero-card { flex-direction: column; align-items: flex-start; }
-      .navbar { padding: 14px 16px; }
-      .content { padding: 16px; }
+      .hero-banner { flex-direction: column; align-items: flex-start; }
+      .top-nav { padding: 12px 16px; }
+      .portal-content { padding: 16px; }
     }
   `]
 })
@@ -1295,13 +1261,28 @@ export class CustomerDashboardComponent implements OnInit {
 
   public user = this.authService.currentUser;
 
-  // Shipments state
+  // Shipments State
   public shipments = signal<Shipment[]>([]);
   public isLoadingShipments = signal<boolean>(false);
+  public searchQuery = '';
   public actionSuccess = signal<string | null>(null);
   public actionError = signal<string | null>(null);
 
-  // Create Requisition Modal
+  // Filtered shipments computed from searchQuery
+  public filteredShipments = computed(() => {
+    const q = this.searchQuery.trim().toLowerCase();
+    const list = this.shipments();
+    if (!q) return list;
+    return list.filter(s =>
+      s.shipment_code.toLowerCase().includes(q) ||
+      s.origin.toLowerCase().includes(q) ||
+      s.destination.toLowerCase().includes(q) ||
+      s.cargo_type.toLowerCase().includes(q) ||
+      s.status.toLowerCase().includes(q)
+    );
+  });
+
+  // Requisition Modal State
   public showCreateModal = signal<boolean>(false);
   public isSubmittingShipment = signal<boolean>(false);
   public isSimulatingRisk = signal<boolean>(false);
@@ -1312,19 +1293,18 @@ export class CustomerDashboardComponent implements OnInit {
   public newCargoType: CargoType = 'MEDICINE';
   public newPriority: CargoPriority = 'CRITICAL';
   public newWeight = 650;
-  public newAddress = 'Barak Valley District Civil Hospital Complex';
-  public newInstructions = 'Critical emergency vaccines. Maintain 2-8°C cold-chain.';
+  public newAddress = 'Civil Hospital Complex, Barak Valley';
+  public newInstructions = 'Critical vaccines. Maintain 2-8°C cold-chain.';
 
-  // QR Modal
+  // QR Modal State
   public selectedShipmentForQR = signal<Shipment | null>(null);
   public isCopied = signal<boolean>(false);
 
-  // Password Modal
+  // Password Modal State
   public showPasswordModal = signal<boolean>(false);
   public showCurrentPassword = signal<boolean>(false);
   public showNewPassword = signal<boolean>(false);
   public passwordLoading = signal<boolean>(false);
-  public passwordSuccess = signal<string | null>(null);
   public passwordError = signal<string | null>(null);
 
   public currentPassword = '';
@@ -1371,6 +1351,35 @@ export class CustomerDashboardComponent implements OnInit {
     this.simulatedRisk.set(null);
   }
 
+  public applyPreset(presetKey: string): void {
+    if (presetKey === 'silchar') {
+      this.newOrigin = 'Guwahati Central Medical Hub';
+      this.newDestination = 'Silchar Civil Hospital';
+      this.newCargoType = 'MEDICINE';
+      this.newPriority = 'CRITICAL';
+      this.newWeight = 650;
+      this.newAddress = 'Barak Valley District Civil Hospital Complex';
+      this.newInstructions = 'Temperature-sensitive anti-venom & cholera vaccines. Cold-chain storage 2-8°C.';
+    } else if (presetKey === 'gangtok') {
+      this.newOrigin = 'Siliguri Food Relief Base';
+      this.newDestination = 'Gangtok District Emergency Store';
+      this.newCargoType = 'FOOD';
+      this.newPriority = 'HIGH';
+      this.newWeight = 1200;
+      this.newAddress = 'District Disaster Relief Store, Development Area, Gangtok';
+      this.newInstructions = 'High-energy dry rations & potable drinking water packets.';
+    } else if (presetKey === 'aizawl') {
+      this.newOrigin = 'Shillong Emergency Store';
+      this.newDestination = 'Aizawl Civil Hospital';
+      this.newCargoType = 'RELIEF';
+      this.newPriority = 'HIGH';
+      this.newWeight = 800;
+      this.newAddress = 'Aizawl District Emergency Response Depot, Mizoram';
+      this.newInstructions = 'Weatherproof relief tents and bedding kits for flood-displaced families.';
+    }
+    this.simulatedRisk.set(null);
+  }
+
   public simulateRisk(): void {
     this.isSimulatingRisk.set(true);
     this.logisticsService.assessRouteRisk({
@@ -1392,7 +1401,7 @@ export class CustomerDashboardComponent implements OnInit {
 
   public submitShipment(): void {
     if (!this.newOrigin || !this.newDestination || !this.newWeight) {
-      this.actionError.set('Please fill in all required shipment requisition fields.');
+      this.actionError.set('Please provide origin, destination, and cargo weight.');
       return;
     }
 
@@ -1412,9 +1421,9 @@ export class CustomerDashboardComponent implements OnInit {
       next: (res) => {
         this.isSubmittingShipment.set(false);
         this.showCreateModal.set(false);
-        this.actionSuccess.set(`Shipment ${res.shipment.shipment_code} requisitioned! AI Risk assessed at ${res.shipment.risk_score}/100.`);
+        this.actionSuccess.set(`Corridor Requisition ${res.shipment.shipment_code} Created! AI Risk assessed at ${res.shipment.risk_score}/100.`);
         this.loadShipments();
-        // Immediately present the generated QR badge to the requisitioner
+        // Immediately display the Driver QR Badge modal
         this.selectedShipmentForQR.set(res.shipment);
       },
       error: (err) => {
@@ -1449,7 +1458,7 @@ export class CustomerDashboardComponent implements OnInit {
   public formatCargo(type: string): string {
     switch (type) {
       case 'MEDICINE': return 'Critical Medicine & Vaccines';
-      case 'FOOD': return 'Emergency Food & Water';
+      case 'FOOD': return 'Emergency Rations & Water';
       case 'RELIEF': return 'Disaster Relief Tents';
       case 'DISASTER_AID': return 'Rescue Gear & Generators';
       default: return 'General Cargo';
@@ -1460,7 +1469,7 @@ export class CustomerDashboardComponent implements OnInit {
     switch (status) {
       case 'READY': return 'Ready for Dispatch';
       case 'IN_TRANSIT': return 'In-Transit on Corridor';
-      case 'DELIVERED': return 'Delivered & Offloaded';
+      case 'DELIVERED': return 'Delivered & Verified';
       default: return status;
     }
   }
@@ -1489,14 +1498,6 @@ export class CustomerDashboardComponent implements OnInit {
     }
   }
 
-  public toggleCurrentPass(): void {
-    this.showCurrentPassword.update(v => !v);
-  }
-
-  public toggleNewPass(): void {
-    this.showNewPassword.update(v => !v);
-  }
-
   public submitPasswordChange(): void {
     this.passwordError.set(null);
     if (!this.currentPassword || !this.newPassword || !this.confirmNewPassword) {
@@ -1522,7 +1523,7 @@ export class CustomerDashboardComponent implements OnInit {
         this.passwordLoading.set(false);
         this.showPasswordModal.set(false);
         this.actionSuccess.set(res.message || 'Password updated successfully!');
-        setTimeout(() => this.actionSuccess.set(null), 7000);
+        setTimeout(() => this.actionSuccess.set(null), 5000);
       },
       error: (err) => {
         this.passwordLoading.set(false);
