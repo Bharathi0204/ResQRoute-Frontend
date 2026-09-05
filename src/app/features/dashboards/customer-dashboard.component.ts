@@ -418,6 +418,15 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
                 <div><strong>Destination:</strong> {{ s.destination }}</div>
                 <div><strong>Cargo:</strong> {{ formatCargo(s.cargo_type) }} ({{ s.weight_kg }} kg)</div>
               </div>
+
+              <div class="qr-download-actions">
+                <button class="btn-download-action" (click)="downloadQrSvg(s)">
+                  <i class='bx bx-download'></i> Download QR Badge
+                </button>
+                <button class="btn-download-action manifest" (click)="downloadManifest(s)">
+                  <i class='bx bx-file'></i> Download Dispatch Packet
+                </button>
+              </div>
             </div>
 
             <!-- AI Risk Breakdown -->
@@ -1159,6 +1168,35 @@ import { Shipment, CargoType, CargoPriority, AIRiskEvaluation } from '../../core
       padding-top: 8px;
       border-top: 1px solid #e2e8f0;
     }
+    .qr-download-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+      margin-top: 4px;
+    }
+    .btn-download-action {
+      background: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-download-action:hover { background: #dbeafe; }
+    .btn-download-action.manifest {
+      background: #f0fdf4;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+    .btn-download-action.manifest:hover { background: #dcfce7; }
 
     .ai-report-card { display: flex; flex-direction: column; gap: 10px; }
     .ai-report-card h4 { margin: 0; font-size: 14px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px; }
@@ -1481,6 +1519,60 @@ export class CustomerDashboardComponent implements OnInit {
       case 'BLOCKED': return 'bx-x-circle';
       default: return 'bx-info-circle';
     }
+  }
+
+  public downloadQrSvg(s: Shipment): void {
+    const blob = new Blob([s.qr_svg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${s.shipment_code}-Dispatch-QR.svg`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.actionSuccess.set(`Downloaded vector QR badge for ${s.shipment_code}`);
+    setTimeout(() => this.actionSuccess.set(null), 4000);
+  }
+
+  public downloadManifest(s: Shipment): void {
+    const packet = {
+      manifest_title: 'ResQRoute Highland Logistics Dispatch Manifest',
+      issued_at: new Date().toISOString(),
+      shipment_code: s.shipment_code,
+      verification_token: s.qr_token,
+      priority: s.cargo_priority,
+      status: s.status,
+      cargo_spec: {
+        cargo_type: s.cargo_type,
+        weight_kg: s.weight_kg,
+        delivery_address: s.delivery_address,
+        special_instructions: s.special_instructions
+      },
+      corridor_route: {
+        origin_hub: s.origin,
+        destination_facility: s.destination,
+        recommended_mountain_pass: s.recommended_route
+      },
+      ai_hazard_evaluation: {
+        composite_score: s.risk_score,
+        risk_level: s.risk_level,
+        summary: s.risk_summary,
+        terrain_factors: s.risk_factors
+      },
+      emergency_protocols: {
+        command_hub: '+91 361 2237000 (Guwahati Central)',
+        bro_road_control: '1800-11-2026',
+        disaster_helpline: '1070 / 112'
+      }
+    };
+    const blob = new Blob([JSON.stringify(packet, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${s.shipment_code}-Dispatch-Manifest.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.actionSuccess.set(`Downloaded full dispatch manifest for ${s.shipment_code}`);
+    setTimeout(() => this.actionSuccess.set(null), 4000);
   }
 
   // Password methods

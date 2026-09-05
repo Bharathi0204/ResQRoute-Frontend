@@ -214,6 +214,12 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
               <i class='bx bx-error-alt'></i>
               <span>Report Hazard / Landslide</span>
             </button>
+
+            <!-- Download Offline Mission Packet -->
+            <button class="control-btn packet-btn" (click)="downloadMissionPacket(trip)">
+              <i class='bx bx-download'></i>
+              <span>Download Offline Mission Packet</span>
+            </button>
           </div>
         </section>
 
@@ -1038,6 +1044,12 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
       border: 1px solid #fecaca;
     }
     .hazard-btn:hover:not(:disabled) { background: #fecaca; }
+    .packet-btn {
+      background: #0f172a;
+      color: #38bdf8;
+      border: 1px solid #1e293b;
+    }
+    .packet-btn:hover:not(:disabled) { background: #1e293b; color: #7dd3fc; }
     .control-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
     /* No Active Mission */
@@ -1715,6 +1727,59 @@ export class DriverDashboardComponent implements OnInit, OnDestroy {
 
     this.updateStatus(trip.trip_code, trip.status, `HAZARD REPORTED: ${hazard}`);
     alert('Emergency SOS Hazard Logged! Central Command Hub notified of route obstruction.');
+  }
+
+  public downloadMissionPacket(trip: Trip): void {
+    const packet = {
+      packet_type: 'ResQRoute Offline Field Mission Packet',
+      downloaded_at: new Date().toISOString(),
+      trip_code: trip.trip_code,
+      assigned_vehicle: trip.vehicle_number,
+      vehicle_type: trip.vehicle_type,
+      mission_status: trip.status,
+      current_checkpoint: trip.current_corridor_segment,
+      shipment: {
+        code: trip.shipment?.shipment_code,
+        token: trip.shipment?.qr_token,
+        cargo_type: trip.shipment?.cargo_type,
+        weight_kg: trip.shipment?.weight_kg,
+        priority: trip.shipment?.cargo_priority,
+        special_instructions: trip.shipment?.special_instructions,
+        delivery_address: trip.shipment?.delivery_address
+      },
+      route_navigation: {
+        origin: trip.shipment?.origin,
+        destination: trip.shipment?.destination,
+        authorized_pass: trip.shipment?.recommended_route,
+        driver_safety_advisory: trip.route_advisory || trip.shipment?.risk_summary
+      },
+      ai_terrain_hazard_intelligence: {
+        risk_score: trip.shipment?.risk_score,
+        risk_level: trip.shipment?.risk_level,
+        terrain_factors: trip.shipment?.risk_factors
+      },
+      emergency_dispatch_frequencies: {
+        central_command_hub: '+91 361 2237000',
+        bro_mountain_clearance: '1800-11-2026',
+        state_disaster_management_authority: '1070',
+        police_highway_patrol: '112'
+      }
+    };
+
+    const blob = new Blob([JSON.stringify(packet, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ResQRoute-Mission-${trip.trip_code}-OfflinePacket.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    try {
+      localStorage.setItem(`resqroute_offline_packet_${trip.trip_code}`, JSON.stringify(packet));
+    } catch {}
+
+    this.actionSuccess.set(`Offline Mission Packet for ${trip.trip_code} downloaded & cached!`);
+    setTimeout(() => this.actionSuccess.set(null), 5000);
   }
 
   public getProgressPercent(status: TripStatus): string {
