@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
@@ -10,393 +10,519 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="dashboard-container">
-      <header class="navbar">
-        <div class="brand">
-          <img src="assets/resqroute-logo.jpg" alt="ResQRoute Logo" class="brand-logo-img">
-          <div class="brand-text">
-            <span>RESQROUTE <strong>DRIVER PWA</strong></span>
-            <small class="brand-sub">Field Logistics Corridor • MDoNER & NDMA</small>
+    <div class="driver-app">
+      <!-- Top Navigation Bar -->
+      <header class="top-bar">
+        <div class="bar-left">
+          <img src="assets/resqroute-logo.jpg" alt="Logo" class="app-logo" />
+          <div class="brand-titles">
+            <span class="brand-title">RESQROUTE</span>
+            <span class="brand-tag">FIELD DRIVER TERMINAL</span>
           </div>
         </div>
-        <div class="nav-right">
-          <span class="status-indicator online">
-            <span class="dot"></span> ONLINE
-          </span>
-          <button class="security-btn" (click)="openPasswordModal()">
-            <i class='bx bx-lock-alt'></i> Password
+
+        <div class="bar-right">
+          <!-- Connectivity Status Badge -->
+          <div class="connectivity-badge" [ngClass]="isOnline() ? 'online' : 'offline'" (click)="checkConnectivity()" title="Click to test server connection">
+            <span class="pulse-dot"></span>
+            <span class="conn-text">{{ isOnline() ? 'ONLINE' : 'OFFLINE' }}</span>
+            <i class='bx bx-refresh refresh-icon' [class.bx-spin]="isCheckingPing()"></i>
+          </div>
+
+          <!-- PWA Install Button -->
+          <button class="install-pwa-btn" (click)="handleInstallClick()">
+            <i class='bx bx-download'></i>
+            <span>{{ isAppInstalled() ? 'App Installed' : 'Install App' }}</span>
           </button>
-          <button class="logout-btn" (click)="logout()">
-            <i class='bx bx-log-out'></i> Logout
+
+          <!-- Security Password Button -->
+          <button class="icon-btn" (click)="openPasswordModal()" title="Security & Password">
+            <i class='bx bx-shield-quarter'></i>
+          </button>
+
+          <!-- Logout Button -->
+          <button class="icon-btn logout" (click)="logout()" title="Logout">
+            <i class='bx bx-log-out'></i>
           </button>
         </div>
       </header>
 
-      <main class="content">
-        <!-- Hero Card -->
-        <div class="hero-card">
-          <div class="hero-info">
-            <span class="badge">FIELD DRIVER COCKPIT</span>
-            <h1>Welcome, {{ user()?.first_name || user()?.username }}!</h1>
-            <p class="sub">Highland Corridor Fleet • Vehicle: <strong>{{ assignedVehiclePlate }}</strong></p>
+      <!-- Main Body Container -->
+      <main class="main-body">
+        <!-- Driver Profile Header -->
+        <section class="driver-profile-strip">
+          <div class="driver-avatar">
+            <i class='bx bxs-user-detail'></i>
           </div>
-          <div class="hero-actions">
-            <button class="activate-btn" (click)="openActivateModal()">
-              <i class='bx bx-qr-scan'></i> Activate Trip with QR
+          <div class="driver-info">
+            <div class="driver-name-row">
+              <h3>{{ user()?.first_name || user()?.username }}</h3>
+              <span class="role-chip">Verified Field Driver</span>
+            </div>
+            <div class="driver-sub-meta">
+              <span><i class='bx bxs-truck'></i> <strong>{{ assignedVehiclePlate }}</strong></span>
+              <span><i class='bx bxs-id-card'></i> {{ user()?.driver_profile?.license_number || 'AS-01-2024-DRV' }}</span>
+              <span><i class='bx bxs-map-pin'></i> {{ user()?.driver_profile?.district || 'Kamrup Base' }}</span>
+            </div>
+          </div>
+          <div class="quick-actions-box">
+            <button class="primary-scan-btn" (click)="openActivateModal()">
+              <i class='bx bx-qr-scan'></i>
+              <span>Activate Mission with QR</span>
             </button>
           </div>
-        </div>
+        </section>
 
-        <!-- Alert Notification Banners -->
-        <div class="alert-banner success" *ngIf="actionSuccess()">
+        <!-- Feedback Banners -->
+        <div class="system-alert success" *ngIf="actionSuccess()">
           <i class='bx bx-check-circle'></i>
           <span>{{ actionSuccess() }}</span>
-          <button (click)="actionSuccess.set(null)">×</button>
+          <button class="alert-dismiss" (click)="actionSuccess.set(null)">×</button>
         </div>
-        <div class="alert-banner error" *ngIf="actionError()">
+        <div class="system-alert error" *ngIf="actionError()">
           <i class='bx bx-error-circle'></i>
           <span>{{ actionError() }}</span>
-          <button (click)="actionError.set(null)">×</button>
+          <button class="alert-dismiss" (click)="actionError.set(null)">×</button>
+        </div>
+        <div class="system-alert warning" *ngIf="!isOnline()">
+          <i class='bx bx-wifi-off'></i>
+          <span>Mountain Corridor Mode: Operating from local offline cache. Changes will sync once cell tower connects.</span>
         </div>
 
-        <!-- LIVE ACTIVE TRIP BANNER (TRIP ACTIVE ✓) -->
-        <div class="active-trip-card" *ngIf="activeTrip() as trip">
-          <div class="active-trip-header">
-            <div class="active-title-block">
-              <span class="pulse-active-badge">
-                <span class="ping-circle"></span>
-                TRIP ACTIVE ✓
+        <!-- ACTIVE MISSION COCKPIT -->
+        <section class="mission-cockpit" *ngIf="activeTrip() as trip">
+          <div class="cockpit-header">
+            <div class="mission-id-block">
+              <span class="mission-status-chip" [ngClass]="trip.status.toLowerCase()">
+                <span class="status-indicator-dot"></span>
+                {{ formatTripStatus(trip.status) }}
               </span>
-              <h2>{{ trip.trip_code }} • {{ trip.shipment?.shipment_code }}</h2>
-              <span class="vehicle-plate-pill"><i class='bx bxs-truck'></i> {{ trip.vehicle_number }}</span>
+              <h2>{{ trip.trip_code }}</h2>
+              <span class="shipment-ref">Requisition: <strong>{{ trip.shipment?.shipment_code || 'RSQ-102' }}</strong></span>
             </div>
-            <div class="active-meta-block">
-              <span class="cargo-tag">{{ formatCargo(trip.shipment?.cargo_type || '') }}</span>
-              <span class="weight-tag">{{ trip.shipment?.weight_kg || 500 }} kg</span>
+            <div class="mission-specs">
+              <div class="spec-item">
+                <small>CARGO</small>
+                <strong>{{ formatCargo(trip.shipment?.cargo_type || 'MEDICINE') }}</strong>
+              </div>
+              <div class="spec-item">
+                <small>PAYLOAD</small>
+                <strong>{{ trip.shipment?.weight_kg || 650 }} kg</strong>
+              </div>
+              <div class="spec-item">
+                <small>PRIORITY</small>
+                <span class="priority-tag" [ngClass]="(trip.shipment?.cargo_priority || 'CRITICAL').toLowerCase()">
+                  {{ trip.shipment?.cargo_priority || 'CRITICAL' }}
+                </span>
+              </div>
             </div>
           </div>
 
-          <!-- Corridor Route Card -->
-          <div class="active-route-box">
-            <div class="route-display">
-              <div class="route-node">
-                <i class='bx bxs-circle origin-point'></i>
-                <div class="node-text">
-                  <small>DISPATCH ORIGIN</small>
-                  <strong>{{ trip.shipment?.origin }}</strong>
+          <!-- Corridor Path Visualizer -->
+          <div class="corridor-path-card">
+            <div class="path-visual">
+              <div class="stop origin">
+                <i class='bx bxs-circle-quarter'></i>
+                <div>
+                  <small>DISPATCH POINT</small>
+                  <h4>{{ trip.shipment?.origin || 'Origin Hub' }}</h4>
                 </div>
               </div>
-              <div class="route-line-wrap">
-                <div class="route-progress-bar"></div>
-                <i class='bx bxs-truck truck-moving-icon'></i>
+              <div class="path-connector">
+                <div class="connector-track">
+                  <div class="connector-fill" [style.width]="getProgressPercent(trip.status)"></div>
+                </div>
+                <div class="moving-vehicle" [style.left]="getProgressPercent(trip.status)">
+                  <i class='bx bxs-truck'></i>
+                </div>
               </div>
-              <div class="route-node">
-                <i class='bx bxs-map-pin dest-point'></i>
-                <div class="node-text">
+              <div class="stop destination">
+                <i class='bx bxs-flag-checkered'></i>
+                <div>
                   <small>DESTINATION</small>
-                  <strong>{{ trip.shipment?.destination }}</strong>
+                  <h4>{{ trip.shipment?.destination || 'Target Facility' }}</h4>
                 </div>
               </div>
             </div>
 
-            <div class="current-segment-bar">
-              <i class='bx bx-current-location'></i>
-              <span><strong>Current Checkpoint:</strong> {{ trip.current_corridor_segment }}</span>
-            </div>
-          </div>
-
-          <!-- AI Terrain Risk Advisory -->
-          <div class="ai-advisory-banner" *ngIf="trip.shipment">
-            <div class="advisory-top">
-              <span class="risk-pill" [ngClass]="trip.shipment.risk_level.toLowerCase()">
-                <i class='bx bx-brain'></i> AI Risk: {{ trip.shipment.risk_score }}/100 • {{ trip.shipment.risk_level }}
-              </span>
-              <span class="rec-route-text" *ngIf="trip.shipment.recommended_route">
-                <i class='bx bx-compass'></i> {{ trip.shipment.recommended_route }}
-              </span>
-            </div>
-            <p class="advisory-desc">{{ trip.route_advisory || trip.shipment.risk_summary }}</p>
-          </div>
-
-          <!-- Driver Transit Control Stepper -->
-          <div class="transit-stepper-box">
-            <h4><i class='bx bx-navigation'></i> Corridor Transit Progression</h4>
-            <div class="stepper-controls">
-              <button 
-                class="step-action-btn in-transit-btn" 
-                (click)="updateStatus(trip.trip_code, 'IN_TRANSIT', 'Mountain Pass Ridge Transit')"
-                [disabled]="isUpdatingStatus() || trip.status === 'IN_TRANSIT' || trip.status === 'COMPLETED'">
-                <i class='bx bx-map-alt'></i>
-                <span>{{ trip.status === 'IN_TRANSIT' ? 'In-Transit Reported ✓' : 'Report Mountain Pass Checkpoint' }}</span>
-              </button>
-
-              <button 
-                class="step-action-btn complete-btn" 
-                (click)="updateStatus(trip.trip_code, 'COMPLETED', 'Destination Arrival')"
-                [disabled]="isUpdatingStatus() || trip.status === 'COMPLETED'">
-                <i class='bx bx-check-double'></i>
-                <span>{{ trip.status === 'COMPLETED' ? 'Delivered & Verified ✓' : 'Confirm Destination Delivery' }}</span>
+            <!-- Current Segment & GPS Checkpoint -->
+            <div class="checkpoint-status-row">
+              <div class="curr-segment">
+                <i class='bx bx-map-pin text-blue'></i>
+                <span>Current Checkpoint: <strong>{{ trip.current_corridor_segment }}</strong></span>
+              </div>
+              <button class="ping-gps-btn" (click)="sendGpsPing(trip)" [disabled]="isUpdatingStatus()">
+                <i class='bx bx-broadcast' [class.bx-spin]="isUpdatingStatus()"></i>
+                <span>Update Checkpoint</span>
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- Trips History & Manifests -->
-        <div class="section-card">
-          <div class="section-header">
+          <!-- AI Terrain & Weather Advisory Card -->
+          <div class="ai-advisory-card" *ngIf="trip.shipment">
+            <div class="advisory-badge-row">
+              <span class="ai-risk-chip" [ngClass]="trip.shipment.risk_level.toLowerCase()">
+                <i class='bx bx-brain'></i>
+                Hazard Score: {{ trip.shipment.risk_score }}/100 • {{ trip.shipment.risk_level }}
+              </span>
+              <span class="ai-model-label">OpenAI Highland Route Advisory</span>
+            </div>
+            <p class="advisory-text">
+              <i class='bx bx-shield-quarter'></i>
+              {{ trip.route_advisory || trip.shipment.risk_summary }}
+            </p>
+            <div class="recommended-bypass" *ngIf="trip.shipment.recommended_route">
+              <i class='bx bx-compass'></i>
+              <span><strong>Authorized Pass:</strong> {{ trip.shipment.recommended_route }}</span>
+            </div>
+          </div>
+
+          <!-- DRIVER TRANSIT CONTROLS (Working Buttons) -->
+          <div class="mission-controls">
+            <!-- If Trip is READY -->
+            <button 
+              class="control-btn start-btn" 
+              *ngIf="trip.status === 'READY'"
+              (click)="updateStatus(trip.trip_code, 'ACTIVE', 'Base Departure Point')"
+              [disabled]="isUpdatingStatus()">
+              <i class='bx bx-play-circle'></i>
+              <span>Depart Base & Start Mission</span>
+            </button>
+
+            <!-- If Trip is ACTIVE (Base Departed) -->
+            <button 
+              class="control-btn checkpoint-btn" 
+              *ngIf="trip.status === 'ACTIVE'"
+              (click)="updateStatus(trip.trip_code, 'IN_TRANSIT', 'Mountain Pass Ridge Transit')"
+              [disabled]="isUpdatingStatus()">
+              <i class='bx bx-navigation'></i>
+              <span>Report Mountain Pass Crossing (In-Transit)</span>
+            </button>
+
+            <!-- If Trip is IN_TRANSIT -->
+            <button 
+              class="control-btn deliver-btn" 
+              *ngIf="trip.status === 'IN_TRANSIT' || trip.status === 'ACTIVE'"
+              (click)="updateStatus(trip.trip_code, 'COMPLETED', 'Destination Facility Offloaded')"
+              [disabled]="isUpdatingStatus()">
+              <i class='bx bx-check-circle'></i>
+              <span>Confirm Destination Delivery & Handover</span>
+            </button>
+
+            <!-- SOS Road Hazard Alert -->
+            <button class="control-btn hazard-btn" (click)="reportRoadHazard(trip)">
+              <i class='bx bx-error-alt'></i>
+              <span>Report Hazard / Landslide</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- NO ACTIVE TRIP PLACEHOLDER -->
+        <section class="no-active-mission" *ngIf="!activeTrip()">
+          <div class="idle-graphic">
+            <i class='bx bxs-truck'></i>
+          </div>
+          <h3>Vehicle Standby: Ready for Dispatch</h3>
+          <p>You have no active corridor run at this moment. Scan a dispatch QR badge or select a pending shipment to initiate transit.</p>
+          <button class="primary-scan-btn" (click)="openActivateModal()">
+            <i class='bx bx-qr-scan'></i>
+            <span>Scan QR Dispatch Badge</span>
+          </button>
+        </section>
+
+        <!-- ASSIGNED MANIFESTS & RUN HISTORY -->
+        <section class="manifests-section">
+          <div class="section-title-bar">
             <div>
-              <h2 class="section-title">
-                <i class='bx bx-list-check'></i> Corridor Trip Manifests
-              </h2>
-              <p class="section-desc">Field missions scanned via driver QR codes or manual dispatch authorization.</p>
+              <h3><i class='bx bx-list-ul'></i> Corridor Manifests & Missions</h3>
+              <p>Assigned Highland routes for your vehicle fleet.</p>
             </div>
-            <div class="section-actions">
-              <button class="refresh-btn" (click)="loadTrips()" [disabled]="isLoadingTrips()">
-                <i class='bx bx-refresh' [class.bx-spin]="isLoadingTrips()"></i> Refresh
-              </button>
-              <button class="activate-btn-sm" (click)="openActivateModal()">
-                <i class='bx bx-qr-scan'></i> Scan QR Code
-              </button>
-            </div>
-          </div>
-
-          <!-- Loading state -->
-          <div class="loading-state" *ngIf="isLoadingTrips() && trips().length === 0">
-            <i class='bx bx-loader-alt bx-spin'></i>
-            <span>Loading corridor trip manifests...</span>
-          </div>
-
-          <!-- Empty state -->
-          <div class="empty-state" *ngIf="!isLoadingTrips() && trips().length === 0">
-            <i class='bx bx-navigation'></i>
-            <p>No active corridor trips assigned yet.</p>
-            <button class="activate-btn" (click)="openActivateModal()">
-              <i class='bx bx-qr-scan'></i> Scan First Trip QR Badge
+            <button class="refresh-list-btn" (click)="loadTrips()" [disabled]="isLoadingTrips()">
+              <i class='bx bx-refresh' [class.bx-spin]="isLoadingTrips()"></i>
+              <span>Refresh</span>
             </button>
           </div>
 
-          <!-- Trips Table -->
-          <div class="table-container" *ngIf="trips().length > 0">
-            <table class="trips-table">
-              <thead>
-                <tr>
-                  <th>Trip ID</th>
-                  <th>Shipment</th>
-                  <th>Assigned Corridor</th>
-                  <th>Vehicle</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let t of trips()">
-                  <td>
-                    <span class="trip-tag">{{ t.trip_code }}</span>
-                  </td>
-                  <td>
-                    <div class="shipment-cell">
-                      <strong>{{ t.shipment?.shipment_code || 'RSQ' }}</strong>
-                      <small>{{ formatCargo(t.shipment?.cargo_type || '') }}</small>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="route-cell">
-                      <span>{{ t.shipment?.origin }}</span>
-                      <i class='bx bx-right-arrow-alt'></i>
-                      <span>{{ t.shipment?.destination }}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="plate-badge">{{ t.vehicle_number }}</span>
-                  </td>
-                  <td>
-                    <span class="status-pill" [ngClass]="t.status.toLowerCase()">
-                      {{ formatTripStatus(t.status) }}
-                    </span>
-                  </td>
-                  <td>
-                    <button 
-                      class="view-trip-btn" 
-                      *ngIf="t.status !== 'COMPLETED'"
-                      (click)="setActiveTrip(t)">
-                      <i class='bx bx-show'></i> Control Trip
-                    </button>
-                    <span class="done-tag" *ngIf="t.status === 'COMPLETED'">
-                      <i class='bx bx-check'></i> Finished
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Driver Profile Information Cards -->
-        <div class="cards-grid">
-          <div class="card">
-            <div class="card-icon"><i class='bx bxs-id-card'></i></div>
-            <h4>Driver Credential</h4>
-            <p class="val">{{ user()?.driver_profile?.license_number || 'AS-01-2023-0089123' }}</p>
-            <span class="tag">Verified Commercial Operator</span>
+          <!-- Empty list state -->
+          <div class="manifests-empty" *ngIf="trips().length === 0 && !isLoadingTrips()">
+            <p>No trip manifests assigned yet. Use <strong>Activate Mission with QR</strong> to claim a shipment.</p>
           </div>
 
-          <div class="card">
-            <div class="card-icon"><i class='bx bxs-map-pin'></i></div>
-            <h4>Assigned Base District</h4>
-            <p class="val">{{ user()?.driver_profile?.district || 'Kamrup Rural' }}</p>
-            <span class="tag">{{ user()?.driver_profile?.state || 'Assam' }}</span>
-          </div>
+          <!-- Manifest Cards Grid -->
+          <div class="manifest-cards-grid">
+            <div class="manifest-card" *ngFor="let t of trips()" [class.selected]="activeTrip()?.id === t.id">
+              <div class="card-head">
+                <div class="id-wrap">
+                  <span class="trip-number">{{ t.trip_code }}</span>
+                  <span class="plate-pill">{{ t.vehicle_number }}</span>
+                </div>
+                <span class="manifest-status-tag" [ngClass]="t.status.toLowerCase()">
+                  {{ formatTripStatus(t.status) }}
+                </span>
+              </div>
 
-          <div class="card">
-            <div class="card-icon"><i class='bx bxs-truck'></i></div>
-            <h4>Assigned Vehicle</h4>
-            <p class="val">{{ assignedVehiclePlate }}</p>
-            <span class="tag">Heavy Mountain Truck</span>
-          </div>
+              <div class="card-route">
+                <div class="route-point">
+                  <i class='bx bxs-circle origin-dot'></i>
+                  <span>{{ t.shipment?.origin }}</span>
+                </div>
+                <div class="route-line"><i class='bx bx-chevron-down'></i></div>
+                <div class="route-point">
+                  <i class='bx bxs-map dest-dot'></i>
+                  <span>{{ t.shipment?.destination }}</span>
+                </div>
+              </div>
 
-          <div class="card security-card">
-            <div class="card-icon lock"><i class='bx bx-shield-quarter'></i></div>
-            <h4>Driver Security</h4>
-            <p class="val">Password Protected</p>
-            <button class="action-link-btn" (click)="openPasswordModal()">
-              <i class='bx bx-key'></i> Update Password
-            </button>
+              <div class="card-details">
+                <span class="cargo-item"><i class='bx bx-package'></i> {{ formatCargo(t.shipment?.cargo_type || '') }}</span>
+                <span class="weight-item">{{ t.shipment?.weight_kg || 500 }} kg</span>
+              </div>
+
+              <div class="card-actions">
+                <button class="card-select-btn" (click)="selectMission(t)">
+                  <i class='bx bx-select-multiple'></i>
+                  <span>{{ activeTrip()?.id === t.id ? 'Viewing in Cockpit ✓' : 'Load into Cockpit' }}</span>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
       </main>
 
-      <!-- QR Trip Activation Modal -->
-      <div class="modal-backdrop" *ngIf="showActivateModal()" (click)="closeActivateModal()">
-        <div class="modal-dialog activate-dialog" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <div class="modal-title-wrap">
-              <i class='bx bx-qr-scan text-cyan'></i>
+      <!-- QR ACTIVATION MODAL -->
+      <div class="modal-overlay" *ngIf="showActivateModal()" (click)="closeActivateModal()">
+        <div class="modal-panel activate-modal" (click)="$event.stopPropagation()">
+          <div class="modal-top">
+            <div class="title-wrap">
+              <i class='bx bx-qr-scan text-blue'></i>
               <div>
-                <h3>Activate Corridor Trip</h3>
-                <p class="modal-subtitle">Scan dispatch QR badge or enter cryptographic shipment token</p>
+                <h3>Activate Corridor Mission</h3>
+                <p>Scan driver dispatch badge or enter token</p>
               </div>
             </div>
-            <button class="close-x" (click)="closeActivateModal()">×</button>
+            <button class="modal-close-btn" (click)="closeActivateModal()">×</button>
           </div>
 
-          <div class="modal-body">
-            <!-- Quick Demo Selectors -->
-            <div class="quick-demo-box">
-              <small class="demo-lbl"><i class='bx bx-bolt-circle'></i> ONE-CLICK QUICK DEMO:</small>
-              <div class="demo-chips">
-                <button type="button" class="chip-btn" (click)="loadDemoToken('RSQ-101')">
-                  Load RSQ-101 (Guwahati → Silchar)
-                </button>
-                <button type="button" class="chip-btn" (click)="loadDemoToken('RSQ-102')">
-                  Load RSQ-102 (Siliguri → Gangtok)
-                </button>
+          <div class="modal-content-area">
+            <!-- Simulated Camera Scan Viewfinder -->
+            <div class="camera-viewfinder-box">
+              <div class="viewfinder-frame">
+                <div class="laser-line"></div>
+                <div class="corner top-left"></div>
+                <div class="corner top-right"></div>
+                <div class="corner btm-left"></div>
+                <div class="corner btm-right"></div>
+                <div class="viewfinder-center">
+                  <i class='bx bx-camera'></i>
+                  <span>Camera Optical Scanner Ready</span>
+                </div>
               </div>
+              <button type="button" class="sim-scan-btn" (click)="loadDemoToken('RSQ-102')">
+                <i class='bx bx-scan'></i> Scan Active Dispatch Badge (Demo)
+              </button>
             </div>
 
-            <div class="form-group">
-              <label>QR Token or Shipment Code <span class="req">*</span></label>
-              <div class="token-input-wrap">
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  [(ngModel)]="qrInput" 
-                  placeholder="e.g. RSQ-102 or RSQ-102-3D5E8A99" 
-                />
-              </div>
-              <small class="help-text">You can paste the token string, enter the shipment code, or load a demo code above.</small>
+            <!-- 1-Click Quick Demo Chips -->
+            <div class="quick-token-chips">
+              <small>QUICK CODES:</small>
+              <button type="button" class="token-chip" (click)="loadDemoToken('RSQ-101')">RSQ-101 (Guwahati → Silchar)</button>
+              <button type="button" class="token-chip" (click)="loadDemoToken('RSQ-102')">RSQ-102 (Siliguri → Gangtok)</button>
             </div>
 
-            <div class="form-group">
-              <label>Field Vehicle Plate / Number</label>
+            <div class="input-field-group">
+              <label>Shipment Code or Cryptographic QR Token</label>
               <input 
                 type="text" 
-                class="form-control" 
+                class="clean-input" 
+                [(ngModel)]="qrInput" 
+                placeholder="e.g. RSQ-102 or RSQ-102-3D5E8A99" 
+              />
+            </div>
+
+            <div class="input-field-group">
+              <label>Assigned Vehicle Plate</label>
+              <input 
+                type="text" 
+                class="clean-input" 
                 [(ngModel)]="assignedVehiclePlate" 
-                placeholder="e.g. AS-01-GC-4921 (TR-102)" 
+                placeholder="e.g. TR-102 or AS-01-GC-4921" 
               />
             </div>
           </div>
 
-          <div class="modal-footer">
-            <button class="cancel-btn" (click)="closeActivateModal()" [disabled]="isActivating()">
-              Cancel
-            </button>
-            <button class="submit-btn activate-btn" (click)="submitActivateTrip()" [disabled]="isActivating()">
+          <div class="modal-bottom">
+            <button class="btn-cancel" (click)="closeActivateModal()" [disabled]="isActivating()">Cancel</button>
+            <button class="btn-confirm" (click)="submitActivateTrip()" [disabled]="isActivating()">
               <i class='bx bx-loader-alt bx-spin' *ngIf="isActivating()"></i>
-              <i class='bx bx-check-circle' *ngIf="!isActivating()"></i>
-              {{ isActivating() ? 'Verifying Token...' : 'Confirm & Activate Trip' }}
+              <i class='bx bx-check-double' *ngIf="!isActivating()"></i>
+              <span>{{ isActivating() ? 'Verifying Dispatch...' : 'Confirm & Activate Mission' }}</span>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Change Password Modal -->
-      <div class="modal-backdrop" *ngIf="showPasswordModal()" (click)="closePasswordModal()">
-        <div class="modal-dialog" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <div class="modal-title-wrap">
-              <i class='bx bx-lock-alt text-cyan'></i>
-              <h3>Update Driver Password</h3>
+      <!-- PWA INSTALL GUIDE MODAL -->
+      <div class="modal-overlay" *ngIf="showInstallModal()" (click)="showInstallModal.set(false)">
+        <div class="modal-panel install-modal" (click)="$event.stopPropagation()">
+          <div class="modal-top">
+            <div class="title-wrap">
+              <i class='bx bx-mobile-alt text-blue'></i>
+              <div>
+                <h3>Install ResQRoute Driver App</h3>
+                <p>Run full-screen on your phone with offline support</p>
+              </div>
             </div>
-            <button class="close-x" (click)="closePasswordModal()">×</button>
+            <button class="modal-close-btn" (click)="showInstallModal.set(false)">×</button>
           </div>
 
-          <div class="modal-body">
-            <div class="alert-banner error" *ngIf="passwordError()">
+          <div class="modal-content-area">
+            <div class="install-guide-steps">
+              <div class="guide-step">
+                <div class="step-num">1</div>
+                <div class="step-desc">
+                  <strong>On Android (Chrome / Edge):</strong>
+                  <p>Tap the browser menu (<strong>⋮</strong> three dots in top right) and select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</p>
+                </div>
+              </div>
+
+              <div class="guide-step">
+                <div class="step-num">2</div>
+                <div class="step-desc">
+                  <strong>On iPhone / iPad (Safari):</strong>
+                  <p>Tap the <strong>Share</strong> button at bottom, scroll down, and tap <strong>"Add to Home Screen"</strong>.</p>
+                </div>
+              </div>
+
+              <div class="guide-step">
+                <div class="step-num">3</div>
+                <div class="step-desc">
+                  <strong>On Windows / Desktop:</strong>
+                  <p>Click the install icon in your address bar (right corner) to install as a standalone desktop app.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-bottom">
+            <button class="btn-confirm" (click)="showInstallModal.set(false)">
+              <span>Got it</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHECKPOINT UPDATE MODAL -->
+      <div class="modal-overlay" *ngIf="showCheckpointModal()" (click)="showCheckpointModal.set(false)">
+        <div class="modal-panel checkpoint-modal" (click)="$event.stopPropagation()">
+          <div class="modal-top">
+            <div class="title-wrap">
+              <i class='bx bx-map-pin text-blue'></i>
+              <div>
+                <h3>Update Corridor Checkpoint</h3>
+                <p>Select or report physical road checkpoint location</p>
+              </div>
+            </div>
+            <button class="modal-close-btn" (click)="showCheckpointModal.set(false)">×</button>
+          </div>
+
+          <div class="modal-content-area">
+            <div class="quick-checkpoints-list">
+              <small>QUICK MOUNTAIN CHECKPOINTS:</small>
+              <div class="cp-buttons">
+                <button type="button" class="cp-btn" (click)="setCheckpoint('NH-6 Meghalaya Ridge Ascent')">NH-6 Meghalaya Ridge</button>
+                <button type="button" class="cp-btn" (click)="setCheckpoint('Sonapur Tunnel Bypass (Barak Valley)')">Sonapur Tunnel</button>
+                <button type="button" class="cp-btn" (click)="setCheckpoint('NH-10 Sevoke Valley - Rangpo Checkpost')">Rangpo Checkpost</button>
+                <button type="button" class="cp-btn" (click)="setCheckpoint('29th Mile Landslide Bypass Zone')">29th Mile Bypass</button>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label>Current Highway Segment or Landmark</label>
+              <input 
+                type="text" 
+                class="clean-input" 
+                [(ngModel)]="customCheckpointText" 
+                placeholder="e.g. Lumshnong Ridge Bridge Mile 44" 
+              />
+            </div>
+          </div>
+
+          <div class="modal-bottom">
+            <button class="btn-cancel" (click)="showCheckpointModal.set(false)">Cancel</button>
+            <button class="btn-confirm" (click)="submitCheckpointUpdate()" [disabled]="isUpdatingStatus()">
+              <i class='bx bx-loader-alt bx-spin' *ngIf="isUpdatingStatus()"></i>
+              <span>Save & Transmit Ping</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASSWORD CHANGE MODAL -->
+      <div class="modal-overlay" *ngIf="showPasswordModal()" (click)="closePasswordModal()">
+        <div class="modal-panel password-modal" (click)="$event.stopPropagation()">
+          <div class="modal-top">
+            <div class="title-wrap">
+              <i class='bx bx-lock-alt text-blue'></i>
+              <div>
+                <h3>Driver Security</h3>
+                <p>Update your account access password</p>
+              </div>
+            </div>
+            <button class="modal-close-btn" (click)="closePasswordModal()">×</button>
+          </div>
+
+          <div class="modal-content-area">
+            <div class="system-alert error" *ngIf="passwordError()">
               <i class='bx bx-error-circle'></i>
               <span>{{ passwordError() }}</span>
             </div>
 
-            <div class="form-group">
+            <div class="input-field-group">
               <label>Current Password</label>
-              <div class="password-input-wrap">
+              <div class="password-wrap">
                 <input 
                   [type]="showCurrentPassword() ? 'text' : 'password'" 
-                  class="form-control" 
+                  class="clean-input" 
                   [(ngModel)]="currentPassword" 
                   placeholder="Enter current password" 
                 />
-                <button type="button" class="eye-toggle-btn" (click)="toggleCurrentPass()">
+                <button type="button" class="toggle-eye" (click)="showCurrentPassword.update(v => !v)">
                   <i class='bx' [ngClass]="showCurrentPassword() ? 'bx-hide' : 'bx-show'"></i>
                 </button>
               </div>
             </div>
 
-            <div class="form-group">
+            <div class="input-field-group">
               <label>New Password (min 8 characters)</label>
-              <div class="password-input-wrap">
+              <div class="password-wrap">
                 <input 
                   [type]="showNewPassword() ? 'text' : 'password'" 
-                  class="form-control" 
+                  class="clean-input" 
                   [(ngModel)]="newPassword" 
                   placeholder="Enter new password" 
                 />
-                <button type="button" class="eye-toggle-btn" (click)="toggleNewPass()">
+                <button type="button" class="toggle-eye" (click)="showNewPassword.update(v => !v)">
                   <i class='bx' [ngClass]="showNewPassword() ? 'bx-hide' : 'bx-show'"></i>
                 </button>
               </div>
             </div>
 
-            <div class="form-group">
+            <div class="input-field-group">
               <label>Confirm New Password</label>
-              <div class="password-input-wrap">
-                <input 
-                  type="password" 
-                  class="form-control" 
-                  [(ngModel)]="confirmNewPassword" 
-                  placeholder="Confirm new password" 
-                />
-              </div>
+              <input 
+                type="password" 
+                class="clean-input" 
+                [(ngModel)]="confirmNewPassword" 
+                placeholder="Repeat new password" 
+              />
             </div>
           </div>
 
-          <div class="modal-footer">
-            <button class="cancel-btn" (click)="closePasswordModal()" [disabled]="passwordLoading()">
-              Cancel
-            </button>
-            <button class="submit-btn" (click)="submitPasswordChange()" [disabled]="passwordLoading()">
-              <span *ngIf="!passwordLoading()"><i class='bx bx-check-shield'></i> Update Password</span>
-              <span *ngIf="passwordLoading()"><i class='bx bx-loader-alt bx-spin'></i> Updating...</span>
+          <div class="modal-bottom">
+            <button class="btn-cancel" (click)="closePasswordModal()" [disabled]="passwordLoading()">Cancel</button>
+            <button class="btn-confirm" (click)="submitPasswordChange()" [disabled]="passwordLoading()">
+              <span *ngIf="!passwordLoading()">Update Password</span>
+              <span *ngIf="passwordLoading()"><i class='bx bx-loader-alt bx-spin'></i> Saving...</span>
             </button>
           </div>
         </div>
@@ -404,481 +530,571 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
     </div>
   `,
   styles: [`
-    .dashboard-container {
+    /* Clean, Professional Driver Terminal Theme */
+    .driver-app {
       min-height: 100vh;
-      background: #f8fafc;
+      background: #f1f5f9;
       color: #0f172a;
-      font-family: 'Poppins', sans-serif;
-    }
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 32px;
-      background: #ffffff;
-      border-bottom: 1px solid #e2e8f0;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 16px;
-      color: #0284c7;
-    }
-    .brand-logo-img {
-      height: 38px;
-      width: auto;
-      border-radius: 8px;
-    }
-    .brand-text {
+      font-family: 'Poppins', system-ui, -apple-system, sans-serif;
       display: flex;
       flex-direction: column;
-      line-height: 1.2;
-    }
-    .brand-sub {
-      font-size: 11px;
-      color: #64748b;
-      font-weight: 500;
-    }
-    .brand strong {
-      color: #0f172a;
-      font-weight: 700;
-    }
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .status-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 12px;
-      border-radius: 12px;
-    }
-    .status-indicator.online {
-      background: #ecfdf5;
-      color: #059669;
-    }
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #10b981;
-    }
-    .security-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #f0fdf4;
-      color: #16a34a;
-      border: 1px solid #bbf7d0;
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-    .security-btn:hover { background: #dcfce7; }
-    .logout-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #fff1f2;
-      color: #e11d48;
-      border: 1px solid #fecdd3;
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-    .logout-btn:hover { background: #ffe4e6; }
-
-    .content {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 28px 24px 60px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
     }
 
-    .hero-card {
-      background: linear-gradient(135deg, #0369a1 0%, #0284c7 55%, #0ea5e9 100%);
+    /* Top Bar */
+    .top-bar {
+      background: #0f172a;
       color: #ffffff;
-      padding: 28px 32px;
-      border-radius: 16px;
+      padding: 12px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.25);
-      flex-wrap: wrap;
-      gap: 20px;
+      border-bottom: 1px solid #1e293b;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    .hero-info .badge {
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(8px);
-      padding: 4px 12px;
+    .bar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .app-logo {
+      height: 36px;
+      width: auto;
+      border-radius: 6px;
+    }
+    .brand-titles {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #38bdf8;
+    }
+    .brand-tag {
+      font-size: 10px;
+      color: #94a3b8;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+    }
+    .bar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Connectivity Status Badge */
+    .connectivity-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
       border-radius: 20px;
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.8px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s;
     }
-    .hero-info h1 {
-      margin: 10px 0 6px;
-      font-size: 26px;
-      font-weight: 700;
+    .connectivity-badge.online {
+      background: #064e3b;
+      color: #34d399;
+      border: 1px solid #059669;
     }
-    .hero-info .sub {
-      opacity: 0.9;
-      font-size: 14px;
+    .connectivity-badge.offline {
+      background: #78350f;
+      color: #fcd34d;
+      border: 1px solid #d97706;
+    }
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .refresh-icon {
+      font-size: 13px;
+      opacity: 0.8;
+    }
+
+    /* PWA Install Button */
+    .install-pwa-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .install-pwa-btn:hover {
+      background: #334155;
+      color: #38bdf8;
+    }
+    .icon-btn {
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { background: #334155; color: #ffffff; }
+    .icon-btn.logout:hover { background: #e11d48; color: #ffffff; border-color: #e11d48; }
+
+    /* Main Body */
+    .main-body {
+      max-width: 1080px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 16px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Driver Profile Strip */
+    .driver-profile-strip {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 16px 20px;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      flex-wrap: wrap;
+    }
+    .driver-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: #e0f2fe;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    .driver-info {
+      flex: 1;
+      min-width: 200px;
+    }
+    .driver-name-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .driver-name-row h3 {
       margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
     }
-    .activate-btn {
+    .role-chip {
+      font-size: 11px;
+      background: #ecfdf5;
+      color: #059669;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .driver-sub-meta {
+      display: flex;
+      gap: 14px;
+      font-size: 12.5px;
+      color: #64748b;
+      flex-wrap: wrap;
+    }
+    .driver-sub-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .primary-scan-btn {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: #ffffff;
-      color: #0369a1;
+      background: #0284c7;
+      color: #ffffff;
       border: none;
-      padding: 12px 22px;
+      padding: 11px 20px;
       border-radius: 10px;
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
       transition: all 0.2s;
+      white-space: nowrap;
     }
-    .activate-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-      background: #f8fafc;
+    .primary-scan-btn:hover {
+      background: #0369a1;
+      transform: translateY(-1px);
     }
 
-    /* TRIP ACTIVE BANNER */
-    .active-trip-card {
+    /* System Alert Banners */
+    .system-alert {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+    .system-alert.success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .system-alert.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .system-alert.warning { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    .alert-dismiss {
+      margin-left: auto;
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: inherit;
+    }
+
+    /* MISSION COCKPIT CARD */
+    .mission-cockpit {
       background: #ffffff;
-      border: 2px solid #0284c7;
-      border-radius: 18px;
-      padding: 24px;
-      box-shadow: 0 10px 30px -5px rgba(2, 132, 199, 0.15);
+      border: 1px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.04);
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
     }
-    .active-trip-header {
+    .cockpit-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       flex-wrap: wrap;
       gap: 14px;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 16px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 14px;
     }
-    .active-title-block {
+    .mission-id-block {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
-    .pulse-active-badge {
+    .mission-status-chip {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      background: #ecfdf5;
-      color: #065f46;
-      border: 1px solid #6ee7b7;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
+      gap: 6px;
+      font-size: 11.5px;
       font-weight: 700;
-      letter-spacing: 0.5px;
+      padding: 3px 10px;
+      border-radius: 12px;
       width: fit-content;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-    .ping-circle {
-      width: 8px;
-      height: 8px;
-      background: #10b981;
+    .mission-status-chip.ready { background: #f1f5f9; color: #475569; }
+    .mission-status-chip.active { background: #ecfdf5; color: #047857; border: 1px solid #6ee7b7; }
+    .mission-status-chip.in_transit { background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; }
+    .mission-status-chip.completed { background: #f0fdf4; color: #166534; }
+    .status-indicator-dot {
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+      background: currentColor;
     }
-    .active-title-block h2 {
+    .mission-id-block h2 {
       margin: 0;
       font-size: 22px;
+      font-weight: 800;
       color: #0f172a;
-      font-weight: 700;
     }
-    .vehicle-plate-pill {
+    .shipment-ref {
       font-size: 12px;
-      background: #f1f5f9;
-      color: #334155;
-      padding: 3px 8px;
-      border-radius: 6px;
-      width: fit-content;
-      font-family: monospace;
-      font-weight: 600;
+      color: #64748b;
     }
-    .active-meta-block {
+    .mission-specs {
       display: flex;
-      gap: 8px;
+      gap: 14px;
       align-items: center;
+      flex-wrap: wrap;
     }
-    .cargo-tag {
-      background: #e0f2fe;
-      color: #0369a1;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .weight-tag {
-      background: #f1f5f9;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      font-family: monospace;
-    }
-
-    /* Route Box */
-    .active-route-box {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 16px 20px;
+    .spec-item {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      background: #f8fafc;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
     }
-    .route-display {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
+    .spec-item small { font-size: 10px; color: #64748b; font-weight: 700; }
+    .spec-item strong { font-size: 13px; color: #0f172a; }
+    .priority-tag {
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      width: fit-content;
     }
-    .route-node {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .origin-point { color: #0284c7; font-size: 16px; }
-    .dest-point { color: #10b981; font-size: 20px; }
-    .node-text { display: flex; flex-direction: column; }
-    .node-text small { font-size: 10.5px; color: #64748b; font-weight: 700; }
-    .node-text strong { font-size: 14px; color: #0f172a; }
+    .priority-tag.critical { background: #fee2e2; color: #b91c1c; }
+    .priority-tag.high { background: #fef3c7; color: #b45309; }
 
-    .route-line-wrap {
-      flex: 1;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .route-progress-bar {
-      width: 100%;
-      height: 4px;
-      background: #cbd5e1;
-      border-radius: 2px;
-    }
-    .truck-moving-icon {
-      position: absolute;
-      color: #0284c7;
-      font-size: 24px;
-      background: #ffffff;
-      padding: 2px;
-      border-radius: 50%;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .current-segment-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: #334155;
-      padding-top: 10px;
-      border-top: 1px solid #e2e8f0;
-    }
-    .current-segment-bar i { color: #0284c7; font-size: 18px; }
-
-    /* AI Terrain Advisory */
-    .ai-advisory-banner {
-      background: #faf5ff;
-      border: 1px solid #e9d5ff;
+    /* Corridor Path Card */
+    .corridor-path-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
       border-radius: 12px;
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 14px;
     }
-    .advisory-top {
+    .path-visual {
       display: flex;
       align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 16px;
     }
-    .risk-pill {
-      font-size: 11.5px;
-      font-weight: 700;
-      padding: 4px 10px;
+    .stop {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .stop i { font-size: 22px; }
+    .stop.origin i { color: #0284c7; }
+    .stop.destination i { color: #16a34a; }
+    .stop small { font-size: 10px; color: #64748b; font-weight: 700; }
+    .stop h4 { margin: 0; font-size: 14px; color: #0f172a; font-weight: 700; }
+
+    .path-connector {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .connector-track {
+      width: 100%;
+      height: 6px;
+      background: #cbd5e1;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .connector-fill {
+      height: 100%;
+      background: #0284c7;
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+    .moving-vehicle {
+      position: absolute;
+      transform: translate(-50%, 0);
+      background: #ffffff;
+      border: 2px solid #0284c7;
+      color: #0284c7;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: left 0.4s ease;
+    }
+
+    .checkpoint-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid #e2e8f0;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 13px;
+    }
+    .curr-segment {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #334155;
+    }
+    .ping-gps-btn {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #0284c7;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
       border-radius: 6px;
+      cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
     }
-    .risk-pill.safe { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-    .risk-pill.caution { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-    .risk-pill.blocked { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-    .rec-route-text { font-size: 12px; color: #6b21a8; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
-    .advisory-desc { font-size: 13px; color: #334155; margin: 0; line-height: 1.45; }
+    .ping-gps-btn:hover { background: #f0f9ff; border-color: #0284c7; }
 
-    /* Stepper Box */
-    .transit-stepper-box {
+    /* AI Advisory Card */
+    .ai-advisory-card {
+      background: #fdf4ff;
+      border: 1px solid #f0abfc;
+      border-radius: 12px;
+      padding: 14px 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 6px;
     }
-    .transit-stepper-box h4 {
-      margin: 0;
-      font-size: 14px;
+    .advisory-badge-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ai-risk-chip {
+      font-size: 11.5px;
       font-weight: 700;
-      color: #0f172a;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .ai-risk-chip.safe { background: #ecfdf5; color: #065f46; }
+    .ai-risk-chip.caution { background: #fef3c7; color: #92400e; }
+    .ai-risk-chip.blocked { background: #fee2e2; color: #991b1b; }
+    .ai-model-label { font-size: 11px; color: #a21caf; font-weight: 600; }
+    .advisory-text {
+      margin: 0;
+      font-size: 13px;
+      color: #4a044e;
+      line-height: 1.4;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .advisory-text i { font-size: 16px; color: #c026d3; flex-shrink: 0; margin-top: 2px; }
+    .recommended-bypass {
+      font-size: 12px;
+      color: #701a75;
       display: flex;
       align-items: center;
       gap: 6px;
+      padding-top: 4px;
+      border-top: 1px dashed #f5d0fe;
     }
-    .stepper-controls {
+
+    /* Working Mission Controls */
+    .mission-controls {
       display: flex;
       gap: 12px;
       flex-wrap: wrap;
     }
-    .step-action-btn {
+    .control-btn {
       flex: 1;
-      min-width: 220px;
-      padding: 12px 18px;
+      min-width: 200px;
+      padding: 13px 18px;
       border-radius: 10px;
-      border: none;
-      font-size: 13.5px;
-      font-weight: 600;
+      font-size: 14px;
+      font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       transition: all 0.2s;
+      border: none;
     }
-    .in-transit-btn { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-    .in-transit-btn:hover:not(:disabled) { background: #fde68a; }
-    .complete-btn { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-    .complete-btn:hover:not(:disabled) { background: #a7f3d0; }
-    .step-action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .start-btn {
+      background: #0284c7;
+      color: #ffffff;
+    }
+    .start-btn:hover:not(:disabled) { background: #0369a1; }
+    .checkpoint-btn {
+      background: #f59e0b;
+      color: #ffffff;
+    }
+    .checkpoint-btn:hover:not(:disabled) { background: #d97706; }
+    .deliver-btn {
+      background: #10b981;
+      color: #ffffff;
+    }
+    .deliver-btn:hover:not(:disabled) { background: #059669; }
+    .hazard-btn {
+      flex: 0 0 auto;
+      min-width: 160px;
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+    .hazard-btn:hover:not(:disabled) { background: #fecaca; }
+    .control-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* Section Card */
-    .section-card {
+    /* No Active Mission */
+    .no-active-mission {
+      background: #ffffff;
+      border: 2px dashed #cbd5e1;
+      border-radius: 16px;
+      padding: 40px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .idle-graphic {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+    .no-active-mission h3 { margin: 0; font-size: 18px; color: #0f172a; }
+    .no-active-mission p { margin: 0; font-size: 13px; color: #64748b; max-width: 460px; }
+
+    /* Manifests Section */
+    .manifests-section {
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
-    .section-header {
+    .section-title-bar {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 14px;
+      align-items: center;
     }
-    .section-title {
-      font-size: 18px;
+    .section-title-bar h3 {
+      margin: 0;
+      font-size: 16px;
       font-weight: 700;
       color: #0f172a;
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin: 0 0 4px;
-    }
-    .section-desc { font-size: 13px; color: #64748b; margin: 0; }
-    .section-actions { display: flex; align-items: center; gap: 10px; }
-    .refresh-btn {
-      display: inline-flex;
-      align-items: center;
       gap: 6px;
-      background: #f1f5f9;
-      color: #475569;
-      border: 1px solid #cbd5e1;
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
     }
-    .activate-btn-sm {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #0284c7;
-      color: #ffffff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    /* Table Styles */
-    .table-container {
-      overflow-x: auto;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-    }
-    .trips-table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      font-size: 13px;
-    }
-    .trips-table th {
+    .section-title-bar p { margin: 2px 0 0; font-size: 12px; color: #64748b; }
+    .refresh-list-btn {
       background: #f8fafc;
+      border: 1px solid #cbd5e1;
       color: #475569;
-      font-weight: 600;
-      padding: 12px 16px;
-      border-bottom: 1px solid #e2e8f0;
-      white-space: nowrap;
-    }
-    .trips-table td {
-      padding: 14px 16px;
-      border-bottom: 1px solid #f1f5f9;
-      vertical-align: middle;
-    }
-    .trips-table tr:hover { background: #f8fafc; }
-    .trip-tag { font-family: monospace; font-weight: 700; color: #0284c7; }
-    .shipment-cell { display: flex; flex-direction: column; }
-    .shipment-cell strong { color: #0f172a; }
-    .shipment-cell small { color: #64748b; font-size: 11px; }
-    .route-cell { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
-    .plate-badge { font-family: monospace; font-weight: 600; background: #f1f5f9; padding: 3px 8px; border-radius: 4px; }
-    .status-pill {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 11.5px;
-      font-weight: 700;
-    }
-    .status-pill.ready { background: #f1f5f9; color: #475569; }
-    .status-pill.active { background: #eff6ff; color: #1d4ed8; }
-    .status-pill.in_transit { background: #fef3c7; color: #b45309; }
-    .status-pill.completed { background: #ecfdf5; color: #047857; }
-
-    .view-trip-btn {
-      background: #eff6ff;
-      color: #0284c7;
-      border: 1px solid #bae6fd;
       padding: 6px 12px;
       border-radius: 6px;
       font-size: 12px;
@@ -888,78 +1104,91 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
       align-items: center;
       gap: 4px;
     }
-    .view-trip-btn:hover { background: #0284c7; color: #ffffff; }
-    .done-tag { font-size: 12px; color: #059669; font-weight: 600; }
 
-    .loading-state, .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 16px;
-      gap: 12px;
-      color: #64748b;
-    }
-    .loading-state i, .empty-state i { font-size: 38px; color: #94a3b8; }
-
-    /* Cards Grid */
-    .cards-grid {
+    .manifest-cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
     }
-    .card {
-      background: #ffffff;
+    .manifest-card {
+      background: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-radius: 14px;
-      padding: 20px;
+      border-radius: 12px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      position: relative;
+      gap: 10px;
+      transition: all 0.2s;
     }
-    .card-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: #e0f2fe;
-      color: #0284c7;
+    .manifest-card.selected {
+      border-color: #0284c7;
+      background: #f0f9ff;
+    }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .id-wrap {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      margin-bottom: 12px;
+      gap: 8px;
     }
-    .card-icon.lock { background: #f0fdf4; color: #16a34a; }
-    .card h4 { font-size: 13px; color: #64748b; margin: 0 0 6px; font-weight: 500; }
-    .card .val { font-size: 16px; font-weight: 600; color: #0f172a; margin: 0 0 10px; }
-    .card .tag {
-      font-size: 11.5px;
-      background: #f1f5f9;
-      color: #475569;
-      padding: 3px 8px;
-      border-radius: 6px;
-      width: fit-content;
+    .trip-number { font-weight: 800; font-size: 14px; color: #0284c7; }
+    .plate-pill { font-size: 11px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+    .manifest-status-tag {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
     }
-    .action-link-btn {
-      background: none;
-      border: none;
-      color: #0284c7;
+    .manifest-status-tag.ready { background: #e2e8f0; color: #475569; }
+    .manifest-status-tag.active { background: #ecfdf5; color: #047857; }
+    .manifest-status-tag.in_transit { background: #eff6ff; color: #1d4ed8; }
+    .manifest-status-tag.completed { background: #f0fdf4; color: #166534; }
+
+    .card-route {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
       font-size: 12.5px;
+      color: #334155;
+    }
+    .route-point { display: flex; align-items: center; gap: 6px; }
+    .origin-dot { color: #0284c7; font-size: 10px; }
+    .dest-dot { color: #10b981; font-size: 12px; }
+    .route-line { padding-left: 3px; font-size: 12px; color: #94a3b8; }
+
+    .card-details {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: #64748b;
+      padding-top: 6px;
+      border-top: 1px solid #e2e8f0;
+    }
+    .card-select-btn {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #0284c7;
+      padding: 7px;
+      border-radius: 6px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 0;
-      margin-top: 4px;
+      justify-content: center;
+      gap: 6px;
     }
-    .action-link-btn:hover { text-decoration: underline; }
+    .card-select-btn:hover { background: #0284c7; color: #ffffff; }
 
-    /* Modals */
-    .modal-backdrop {
+    /* Modals System */
+    .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
@@ -967,43 +1196,156 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
       z-index: 1000;
       padding: 16px;
     }
-    .modal-dialog {
+    .modal-panel {
       background: #ffffff;
-      border-radius: 18px;
+      border-radius: 16px;
       width: 100%;
-      max-width: 500px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+      max-width: 520px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      max-height: 90vh;
     }
-    .activate-dialog { max-width: 560px; }
-
-    .modal-header {
+    .modal-top {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      padding: 20px 24px;
+      padding: 18px 20px;
       border-bottom: 1px solid #e2e8f0;
     }
-    .modal-title-wrap { display: flex; align-items: center; gap: 12px; }
-    .modal-title-wrap i { font-size: 24px; color: #0284c7; }
-    .modal-title-wrap h3 { margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; }
-    .modal-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
-    .close-x { background: none; border: none; font-size: 24px; color: #94a3b8; cursor: pointer; }
-
-    .modal-body {
-      padding: 20px 24px;
-      overflow-y: auto;
+    .title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .title-wrap i { font-size: 24px; }
+    .title-wrap h3 { margin: 0; font-size: 17px; font-weight: 700; color: #0f172a; }
+    .title-wrap p { margin: 2px 0 0; font-size: 12px; color: #64748b; }
+    .modal-close-btn {
+      background: none;
+      border: none;
+      font-size: 22px;
+      color: #94a3b8;
+      cursor: pointer;
+    }
+    .modal-content-area {
+      padding: 18px 20px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
+      max-height: 75vh;
+      overflow-y: auto;
     }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group label { font-size: 12.5px; font-weight: 600; color: #334155; }
-    .req { color: #dc2626; }
-    .form-control {
+    .modal-bottom {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 20px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    /* Camera Viewfinder */
+    .camera-viewfinder-box {
+      background: #0f172a;
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .viewfinder-frame {
+      width: 180px;
+      height: 180px;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .corner {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-color: #38bdf8;
+      border-style: solid;
+    }
+    .corner.top-left { top: 6px; left: 6px; border-width: 3px 0 0 3px; }
+    .corner.top-right { top: 6px; right: 6px; border-width: 3px 3px 0 0; }
+    .corner.btm-left { bottom: 6px; left: 6px; border-width: 0 0 3px 3px; }
+    .corner.btm-right { bottom: 6px; right: 6px; border-width: 0 3px 3px 0; }
+    .laser-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
+      animation: scanLaser 2s linear infinite;
+    }
+    @keyframes scanLaser {
+      0% { top: 0%; }
+      50% { top: 100%; }
+      100% { top: 0%; }
+    }
+    .viewfinder-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #94a3b8;
+      font-size: 11px;
+      text-align: center;
+      gap: 4px;
+    }
+    .viewfinder-center i { font-size: 28px; color: #cbd5e1; }
+    .sim-scan-btn {
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .quick-token-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .quick-token-chips small { font-size: 10.5px; font-weight: 700; color: #64748b; }
+    .token-chip {
+      background: #f0f9ff;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .token-chip:hover { background: #e0f2fe; }
+
+    .input-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .input-field-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+    }
+    .clean-input {
       padding: 10px 12px;
       border: 1px solid #cbd5e1;
       border-radius: 8px;
@@ -1011,43 +1353,10 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
       color: #0f172a;
       outline: none;
     }
-    .form-control:focus { border-color: #0284c7; }
-    .help-text { font-size: 11.5px; color: #64748b; }
+    .clean-input:focus { border-color: #0284c7; }
 
-    .quick-demo-box {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: 10px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .demo-lbl { font-size: 10.5px; font-weight: 700; color: #0369a1; letter-spacing: 0.5px; }
-    .demo-chips { display: flex; gap: 8px; flex-wrap: wrap; }
-    .chip-btn {
-      background: #ffffff;
-      border: 1px solid #7dd3fc;
-      color: #0369a1;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .chip-btn:hover { background: #0284c7; color: #ffffff; }
-
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      padding: 16px 24px;
-      border-top: 1px solid #e2e8f0;
-      background: #f8fafc;
-    }
-    .cancel-btn {
-      padding: 9px 18px;
+    .btn-cancel {
+      padding: 8px 16px;
       background: #ffffff;
       border: 1px solid #cbd5e1;
       border-radius: 8px;
@@ -1055,37 +1364,79 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
       font-weight: 600;
       cursor: pointer;
     }
-    .submit-btn {
-      padding: 9px 20px;
+    .btn-confirm {
+      padding: 8px 18px;
       background: #0284c7;
       color: #ffffff;
       border: none;
       border-radius: 8px;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
-    .submit-btn:hover { background: #0369a1; }
-    .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+    .btn-confirm:hover { background: #0369a1; }
+    .btn-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* Alert Banners */
-    .alert-banner {
+    /* Install Guide Steps */
+    .install-guide-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .guide-step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      background: #0284c7;
+      color: #ffffff;
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
-      border-radius: 10px;
+      justify-content: center;
       font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
     }
-    .alert-banner.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
-    .alert-banner.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-    .alert-banner button { margin-left: auto; background: none; border: none; font-size: 18px; cursor: pointer; color: inherit; }
+    .step-desc strong { font-size: 13px; color: #0f172a; display: block; margin-bottom: 2px; }
+    .step-desc p { margin: 0; font-size: 12px; color: #475569; line-height: 1.4; }
 
-    .password-input-wrap { position: relative; display: flex; align-items: center; }
-    .eye-toggle-btn {
+    /* Checkpoint Modal Specifics */
+    .quick-checkpoints-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .quick-checkpoints-list small { font-size: 11px; font-weight: 700; color: #64748b; }
+    .cp-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .cp-btn {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #334155;
+      text-align: left;
+      cursor: pointer;
+    }
+    .cp-btn:hover { background: #f0f9ff; border-color: #0284c7; color: #0284c7; }
+
+    .password-wrap { position: relative; display: flex; align-items: center; }
+    .toggle-eye {
       position: absolute;
       right: 10px;
       background: none;
@@ -1095,21 +1446,33 @@ import { Trip, TripStatus } from '../../core/models/logistics.model';
       font-size: 18px;
     }
 
-    @media (max-width: 768px) {
-      .route-display { flex-direction: column; align-items: flex-start; }
-      .route-line-wrap { display: none; }
-      .navbar { padding: 14px 16px; }
-      .content { padding: 16px; }
+    @media (max-width: 640px) {
+      .path-visual { flex-direction: column; align-items: flex-start; }
+      .path-connector { display: none; }
+      .mission-controls { flex-direction: column; }
+      .control-btn { min-width: 100%; }
+      .driver-profile-strip { flex-direction: column; align-items: flex-start; }
+      .quick-actions-box { width: 100%; }
+      .primary-scan-btn { width: 100%; justify-content: center; }
     }
   `]
 })
-export class DriverDashboardComponent implements OnInit {
+export class DriverDashboardComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private logisticsService = inject(LogisticsService);
 
   public user = this.authService.currentUser;
 
-  // Trips state
+  // Real-time Connectivity Signals
+  public isOnline = signal<boolean>(navigator.onLine);
+  public isCheckingPing = signal<boolean>(false);
+
+  // PWA Install Signals & Event
+  public isAppInstalled = signal<boolean>(false);
+  public showInstallModal = signal<boolean>(false);
+  private deferredPrompt: any = null;
+
+  // Trips & Active Mission
   public trips = signal<Trip[]>([]);
   public activeTrip = signal<Trip | null>(null);
   public isLoadingTrips = signal<boolean>(false);
@@ -1117,29 +1480,99 @@ export class DriverDashboardComponent implements OnInit {
   public actionSuccess = signal<string | null>(null);
   public actionError = signal<string | null>(null);
 
-  // Activate Modal
+  // Activate Mission Modal
   public showActivateModal = signal<boolean>(false);
   public isActivating = signal<boolean>(false);
   public qrInput = '';
   public assignedVehiclePlate = 'TR-102';
+
+  // Checkpoint Modal
+  public showCheckpointModal = signal<boolean>(false);
+  public customCheckpointText = '';
 
   // Password Modal
   public showPasswordModal = signal<boolean>(false);
   public showCurrentPassword = signal<boolean>(false);
   public showNewPassword = signal<boolean>(false);
   public passwordLoading = signal<boolean>(false);
-  public passwordSuccess = signal<string | null>(null);
   public passwordError = signal<string | null>(null);
 
   public currentPassword = '';
   public newPassword = '';
   public confirmNewPassword = '';
 
+  private onlineHandler = () => this.handleNetworkChange(true);
+  private offlineHandler = () => this.handleNetworkChange(false);
+  private beforeInstallPromptHandler = (e: any) => {
+    e.preventDefault();
+    this.deferredPrompt = e;
+  };
+
   ngOnInit(): void {
     if (this.user()?.driver_profile?.vehicle_number) {
       this.assignedVehiclePlate = this.user()!.driver_profile!.vehicle_number;
     }
+
+    // Check if app is already running standalone
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      this.isAppInstalled.set(true);
+    }
+
+    // Network listeners
+    window.addEventListener('online', this.onlineHandler);
+    window.addEventListener('offline', this.offlineHandler);
+    window.addEventListener('beforeinstallprompt', this.beforeInstallPromptHandler);
+
     this.loadTrips();
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('online', this.onlineHandler);
+    window.removeEventListener('offline', this.offlineHandler);
+    window.removeEventListener('beforeinstallprompt', this.beforeInstallPromptHandler);
+  }
+
+  private handleNetworkChange(status: boolean): void {
+    this.isOnline.set(status);
+    if (status) {
+      this.actionSuccess.set('Network reconnected! Synchronizing with Highland Logistics Hub...');
+      this.loadTrips();
+    } else {
+      this.actionError.set('Cellular link lost. Switched to offline corridor cache mode.');
+    }
+  }
+
+  public checkConnectivity(): void {
+    this.isCheckingPing.set(true);
+    this.authService.checkHealth().subscribe({
+      next: () => {
+        this.isCheckingPing.set(false);
+        this.isOnline.set(true);
+        this.actionSuccess.set('Highland Command Link: Optimal (Online • 14ms ping)');
+        setTimeout(() => this.actionSuccess.set(null), 4000);
+      },
+      error: () => {
+        this.isCheckingPing.set(false);
+        this.isOnline.set(false);
+        this.actionError.set('Server unreachable. Running in offline corridor mode.');
+      }
+    });
+  }
+
+  public handleInstallClick(): void {
+    if (this.deferredPrompt) {
+      this.deferredPrompt.prompt();
+      this.deferredPrompt.userChoice.then((choice: any) => {
+        if (choice.outcome === 'accepted') {
+          this.isAppInstalled.set(true);
+          this.actionSuccess.set('ResQRoute Driver PWA installed successfully on your device!');
+        }
+        this.deferredPrompt = null;
+      });
+    } else {
+      // Show simple 3-step installation guide modal
+      this.showInstallModal.set(true);
+    }
   }
 
   public loadTrips(): void {
@@ -1150,7 +1583,12 @@ export class DriverDashboardComponent implements OnInit {
         const list = res.trips || [];
         this.trips.set(list);
 
-        // Auto-select the first active or in-transit trip as prominent cockpit banner
+        // Cache trips locally for offline resilience in mountain passes
+        try {
+          localStorage.setItem('resqroute_cached_trips', JSON.stringify(list));
+        } catch { /* storage full */ }
+
+        // Select active trip
         const active = list.find(t => t.status === 'ACTIVE' || t.status === 'IN_TRANSIT');
         if (active) {
           this.activeTrip.set(active);
@@ -1160,11 +1598,20 @@ export class DriverDashboardComponent implements OnInit {
       },
       error: () => {
         this.isLoadingTrips.set(false);
+        // Load from offline cache
+        const raw = localStorage.getItem('resqroute_cached_trips');
+        if (raw) {
+          try {
+            const cached = JSON.parse(raw);
+            this.trips.set(cached);
+            if (cached.length > 0) this.activeTrip.set(cached[0]);
+          } catch {}
+        }
       }
     });
   }
 
-  public setActiveTrip(t: Trip): void {
+  public selectMission(t: Trip): void {
     this.activeTrip.set(t);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -1200,7 +1647,7 @@ export class DriverDashboardComponent implements OnInit {
       next: (res) => {
         this.isActivating.set(false);
         this.showActivateModal.set(false);
-        this.actionSuccess.set(res.message);
+        this.actionSuccess.set(`Mission ${res.trip.trip_code} Activated! Safe travels on the corridor.`);
         this.activeTrip.set(res.trip);
         this.loadTrips();
       },
@@ -1214,36 +1661,88 @@ export class DriverDashboardComponent implements OnInit {
 
   public updateStatus(tripCode: string, status: TripStatus, segment?: string): void {
     this.isUpdatingStatus.set(true);
+    this.actionError.set(null);
+
     this.logisticsService.updateTripStatus(tripCode, status, segment).subscribe({
       next: (res) => {
         this.isUpdatingStatus.set(false);
-        this.actionSuccess.set(res.message);
+        this.actionSuccess.set(res.message || `Status updated to ${status}`);
         this.activeTrip.set(res.trip);
         this.loadTrips();
       },
       error: (err) => {
         this.isUpdatingStatus.set(false);
-        this.actionError.set(err.error?.detail || 'Failed to update transit status.');
+        this.actionError.set(err.error?.detail || 'Failed to update transit status. Check connection.');
       }
     });
   }
 
+  public sendGpsPing(trip: Trip): void {
+    this.customCheckpointText = trip.current_corridor_segment || '';
+    this.showCheckpointModal.set(true);
+  }
+
+  public setCheckpoint(text: string): void {
+    this.customCheckpointText = text;
+  }
+
+  public submitCheckpointUpdate(): void {
+    if (!this.activeTrip() || !this.customCheckpointText.trim()) return;
+
+    this.isUpdatingStatus.set(true);
+    this.logisticsService.updateTripStatus(
+      this.activeTrip()!.trip_code,
+      this.activeTrip()!.status,
+      this.customCheckpointText.trim()
+    ).subscribe({
+      next: (res) => {
+        this.isUpdatingStatus.set(false);
+        this.showCheckpointModal.set(false);
+        this.actionSuccess.set(`Checkpoint updated: "${this.customCheckpointText}"`);
+        this.activeTrip.set(res.trip);
+        this.loadTrips();
+      },
+      error: () => {
+        this.isUpdatingStatus.set(false);
+        this.showCheckpointModal.set(false);
+      }
+    });
+  }
+
+  public reportRoadHazard(trip: Trip): void {
+    const hazard = prompt('Enter Road Hazard / Blockage details (e.g. Landslide at KM-42):', 'Landslide blockage observed on mountain pass. Single-lane slow transit.');
+    if (!hazard) return;
+
+    this.updateStatus(trip.trip_code, trip.status, `HAZARD REPORTED: ${hazard}`);
+    alert('Emergency SOS Hazard Logged! Central Command Hub notified of route obstruction.');
+  }
+
+  public getProgressPercent(status: TripStatus): string {
+    switch (status) {
+      case 'READY': return '5%';
+      case 'ACTIVE': return '35%';
+      case 'IN_TRANSIT': return '65%';
+      case 'COMPLETED': return '96%';
+      default: return '10%';
+    }
+  }
+
   public formatCargo(type: string): string {
     switch (type) {
-      case 'MEDICINE': return 'Critical Medicine';
-      case 'FOOD': return 'Emergency Rations';
+      case 'MEDICINE': return 'Critical Medicine & Vaccines';
+      case 'FOOD': return 'Emergency Rations & Water';
       case 'RELIEF': return 'Disaster Relief Tents';
       case 'DISASTER_AID': return 'Rescue Gear & Generators';
-      default: return 'General Cargo';
+      default: return 'General Supplies';
     }
   }
 
   public formatTripStatus(status: string): string {
     switch (status) {
-      case 'READY': return 'Pending Activation';
-      case 'ACTIVE': return 'Active • Departed Base';
+      case 'READY': return 'Pending Dispatch';
+      case 'ACTIVE': return 'Mission Active';
       case 'IN_TRANSIT': return 'In-Transit on Pass';
-      case 'COMPLETED': return 'Delivered & Completed';
+      case 'COMPLETED': return 'Delivered & Handed Over';
       default: return status;
     }
   }
@@ -1261,14 +1760,6 @@ export class DriverDashboardComponent implements OnInit {
     if (!this.passwordLoading()) {
       this.showPasswordModal.set(false);
     }
-  }
-
-  public toggleCurrentPass(): void {
-    this.showCurrentPassword.update(v => !v);
-  }
-
-  public toggleNewPass(): void {
-    this.showNewPassword.update(v => !v);
   }
 
   public submitPasswordChange(): void {
@@ -1295,13 +1786,12 @@ export class DriverDashboardComponent implements OnInit {
       next: (res) => {
         this.passwordLoading.set(false);
         this.showPasswordModal.set(false);
-        this.actionSuccess.set(res.message || 'Password updated successfully!');
-        setTimeout(() => this.actionSuccess.set(null), 7000);
+        this.actionSuccess.set(res.message || 'Driver password updated successfully!');
+        setTimeout(() => this.actionSuccess.set(null), 5000);
       },
       error: (err) => {
         this.passwordLoading.set(false);
-        const errDetail = err.error?.detail || err.error?.current_password?.[0] || 'Failed to update password.';
-        this.passwordError.set(errDetail);
+        this.passwordError.set(err.error?.detail || err.error?.current_password?.[0] || 'Failed to update password.');
       }
     });
   }
